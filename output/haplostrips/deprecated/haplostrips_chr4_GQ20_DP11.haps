@@ -1,0 +1,8 @@
+#CHROM	POS	REF	ALT	Pfo_Bar-2_1	Pfo_Bar-2_2	Pfo_Bar-3_1	Pfo_Bar-3_2	Pfo_Br_1	Pfo_Br_2	Pfo_Cha_1	Pfo_Cha_2	Pfo_D1_1	Pfo_D1_2	Pfo_Gua_1	Pfo_Gua_2	Pfo_Lim_1	Pfo_Lim_2	Pfo_Man_1	Pfo_Man_2	Pfo_Olm_1	Pfo_Olm_2	Pfo_Pad_1	Pfo_Pad_2	Pfo_SM_1	Pfo_SM_2	Pfo_Tan-1_1	Pfo_Tan-1_2	Pfo_Tan-2_1	Pfo_Tan-2_2	Pfo_Tan-3_1	Pfo_Tan-3_2	Pfo_Tan-4_1	Pfo_Tan-4_2	Pfo_Vic-1_1	Pfo_Vic-1_2	Pfo_Vic-2_1	Pfo_Vic-2_2	Pfo_nBr-1_1	Pfo_nBr-1_2	Pfo_nBr-2_1	Pfo_nBr-2_2	Pla_Cha_1	Pla_Cha_2	Pla_Fld_1	Pla_Fld_2	Pla_Flo_1	Pla_Flo_2	Pla_Olm_1	Pla_Olm_2	Pla_SM_1	Pla_SM_2	Pme_Azu_1	Pme_Azu_2	Pme_Cav_1	Pme_Cav_2	Pme_Gua_1	Pme_Gua_2	Pme_Ver_1	Pme_Ver_2
+chr4	1736753	G	A	0	1	0	1	0	1	1	1	0	1	1	1	1	1	1	1	0	1	0	1	0	1	0	1	1	1	0	1	0	1	1	1	0	1	0	1	0	1	1	1	1	1	1	1	1	1	1	1	0	0	0	0	0	0	0	0
+chr4	1737285	T	A	0	1	0	1	0	1	1	1	0	1	1	1	1	1	1	1	0	1	0	1	0	1	0	1	1	1	0	1	0	1	1	1	0	1	0	1	0	1	1	1	1	1	1	1	1	1	1	1	0	0	0	0	0	0	0	0
+chr4	1743332	T	C	0	1	0	1	0	1	1	1	0	1	1	1	1	1	1	1	0	1	0	1	0	1	0	1	1	1	0	1	0	1	1	1	0	1	0	1	0	1	1	1	1	1	1	1	1	1	1	1	0	0	0	0	0	0	0	0
+chr4	4099574	C	T	0	1	0	1	0	1	1	1	0	1	1	1	1	1	1	1	0	1	0	1	0	1	0	1	1	1	0	1	0	1	1	1	0	1	0	1	0	1	1	1	1	1	1	1	1	1	1	1	0	0	0	0	0	0	0	0
+chr4	12624494	G	A	0	1	0	1	0	1	0	1	0	1	0	1	0	1	0	1	0	1	0	1	0	1	0	1	0	1	0	1	0	1	0	1	0	1	0	1	0	1	1	1	1	1	1	1	1	1	1	1	0	0	0	0	0	0	0	0
+chr4	29059160	G	T	0	1	0	1	0	1	0	1	0	1	0	1	1	1	0	1	0	1	0	1	0	1	0	1	0	1	0	1	0	1	0	1	0	1	0	1	0	1	1	1	1	1	1	1	1	1	1	1	0	0	0	0	0	0	0	0
+chr4	35848125	G	A	0	1	0	1	0	1	0	1	0	1	0	1	0	1	0	1	0	1	0	1	0	1	0	1	0	1	0	1	0	1	0	1	0	1	0	1	0	1	1	1	1	1	1	1	1	1	1	1	0	0	0	0	0	0	0	0
