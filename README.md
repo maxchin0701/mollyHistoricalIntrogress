@@ -5,3 +5,5 @@ Dataset includes 19 hybrid Poecilia formosa samples, 5 parental P. latipinna sam
 To recreate, please obtain the reference genome at (INSERT RERFERENCE SOURCE HERE) and modify the data/refInfo.tsv file with the appropriate path info.
 
 This pipeline is designed to be run in a computing environment with SLURM job submission, where each individual snakejob will be submitted as a separate SLURM job. The snakemake command should be run in a session that continues to operate in the background if the user is disconnected from the server (tmux is ideal for this). This is especially important as the variant calling process will take several days. Please view the runSnakemake.sh file for some example tmux and snakemake commands.
+
+The data directory should contain the following subdirectories: rawSeq, trimSeq, aligned, hapCalls, refGenome
