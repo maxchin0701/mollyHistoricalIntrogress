@@ -22,7 +22,7 @@ snakemake --executor cluster-generic --cluster-generic-submit-cmd "sbatch -N {re
 
 #run with target rule
 snakemake -R --until "INSERT TARGET RULE HERE" --executor cluster-generic --cluster-generic-submit-cmd "sbatch -N {resources.nodes} -p {resources.slurm_partition} {resources.slurm_extra}" \
---cluster-generic-cancel-cmd scancel --use-conda --jobs 30 --immediate-submit --notemp --printshellcmds --latency-wait 21600
+--cluster-generic-cancel-cmd scancel --use-conda --jobs 30 --immediate-submit --notemp --printshellcmds --latency-wait 21600 --rerun-triggers mtime
 
 #dry run
 snakemake --executor cluster-generic --cluster-generic-submit-cmd "sbatch -N {resources.nodes} -p {resources.slurm_partition} {resources.slurm_extra}" \

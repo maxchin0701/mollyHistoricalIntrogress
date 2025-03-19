@@ -103,7 +103,7 @@ rule trimFastq:
 rule indexRef:
     priority: 10
     input:
-        "data/refGenome/{refName}.fasta",
+        expand("data/refGenome/{refName}.fasta",refName = ref_df["NAME"]),
     resources:
         slurm_partition="RM-shared",
         nodes=1,
@@ -122,7 +122,8 @@ rule indexRef:
 rule createIntervalL:
     priority: 9
     input:
-        "data/refGenome/PForSch01.fasta",
+       expand("data/refGenome/{refName}.fasta",refName = ref_df["NAME"]),
+       expand("data/refGenome/{refName}.dict",refName = ref_df["NAME"]),
     resources:
         slurm_partition="RM-shared",
         nodes=1,

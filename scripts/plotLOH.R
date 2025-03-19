@@ -7,9 +7,9 @@ library(grDevices)
 chrs <- read.delim(paste0("../data/chrIndex.tsv"),
            sep="\t",row.names = NULL,header = T)
 #cutoff GQ
-parentalSpecies <- "GLMV"
+parentalSpecies <- "LM"
 cutoffGQ <- 20
-cutoffDP <- 6
+cutoffDP <- 8
 
 #set up dfs to store
 SNPall <- as.data.frame(matrix(NA,nrow=0,ncol=3))

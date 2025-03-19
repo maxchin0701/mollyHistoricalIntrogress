@@ -1,3 +1,3 @@
-chr	start	end	group	NA
-chr21	21812270	21812272	17	1
-chr21	23108769	23108771	1	1
+chr	start	end	group	nSNPS	samps
+chr21	21812270	21812272	17	1	NA
+chr21	23108769	23108771	1	1	NA

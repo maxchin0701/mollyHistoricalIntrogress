@@ -146,6 +146,7 @@ if(nrow(sampDepths) - length(dropSNPs) == 0){
     end <- list()
     nSamps <- list()
     nSNPs <- list()
+    samps <- list()
     startAnc <- list()
     endAnc <- list()
     anc <- list()
@@ -226,11 +227,13 @@ if(nrow(sampDepths) - length(dropSNPs) == 0){
           start <- start[-length(start)]
           end <- end[-length(end)]
           nSamps <- nSamps[-length(nSamps)]
+          nSNPs <- nSNPs[-length(nSNPs)]
+          nSNPs[[length(nSNPs)]] <- 2
+          samps <- samps[-length(samps)]
+          samps[[length(samps)]] <- paste(sampLOH,collapse=",")
           startAnc <- startAnc[-length(startAnc)]
           endAnc <- endAnc[-length(endAnc)]
           anc <- anc[-length(anc)]
-          nSNPs <- nSNPs[-length(nSNPs)]
-          nSNPs[[length(nSNPs)]] <- 2
         }
         
         #add to end of most recent LOH region
@@ -298,6 +301,7 @@ if(nrow(sampDepths) - length(dropSNPs) == 0){
         end[[length(end)+1]] <- curPos + 1
         nSamps[[length(nSamps)+1]] <- length(sampLOH)
         nSNPs[[length(nSNPs)+1]] <- 1
+        samps[[length(samps)+1]] <- paste(sampLOH,collapse=",")
         
         #start new anc region
         startAnc[[length(startAnc)+1]] <- curPos - 1
@@ -387,7 +391,8 @@ if(nrow(sampDepths) - length(dropSNPs) == 0){
       LOHRegions <- as.data.frame(cbind(chr,do.call(rbind,start),
                                   do.call(rbind,end),
                                   do.call(rbind,nSamps),
-                                  do.call(rbind,nSNPs)))
+                                  do.call(rbind,nSNPs),
+                                  do.call(rbind,samps)))
       
       LOHAnc <- as.data.frame(cbind(chr,
                                     do.call(rbind,startAnc),
@@ -396,7 +401,7 @@ if(nrow(sampDepths) - length(dropSNPs) == 0){
       
       #### PREPARE FOR SAVING ####
       colnames(SNPall) <- c("chr","start","end")
-      colnames(LOHRegions) <- c("chr","start","end","group","nSNPS")
+      colnames(LOHRegions) <- c("chr","start","end","group","nSNPS","samps")
       colnames(LOHAnc) <- c("chr","start","end","group")
       
       #converting columns
@@ -405,6 +410,8 @@ if(nrow(sampDepths) - length(dropSNPs) == 0){
       LOHRegions$start <- as.numeric(LOHRegions$start)
       LOHRegions$end <- as.numeric(LOHRegions$end)
       LOHRegions$group <- as.numeric(LOHRegions$group)
+      LOHRegions$nSNPS <- as.numeric(LOHRegions$nSNPS)
+      LOHRegions$samps <- as.numeric(LOHRegions$samps)
       LOHAnc$start <- as.numeric(LOHAnc$start)
       LOHAnc$end <- as.numeric(LOHAnc$end)
       

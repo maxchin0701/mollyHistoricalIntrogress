@@ -1,2 +1,2 @@
-chr	start	end	group	NA
-chr14	18320805	18320807	1	1
+chr	start	end	group	nSNPS	samps
+chr14	18320805	18320807	1	1	NA
