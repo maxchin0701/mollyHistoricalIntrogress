@@ -14,7 +14,7 @@ tmux attach -t $(int) #attach existing window
 
 #make sure tmux is in the right directory and has conda env activated
 #use the below command to submit snakemake jobs as separate slurm jobs
-#adjust the --jobs parameter as needed (especially important for the dumpSRA rule: the raw fastq files before being gzipped are huge!!!)
+#adjust the --jobs parameter as needed (especially important for the variant calling step: there are a total of 690 jobs to run for the callHaps rule alone so you want to make sure you can run lots of stuff in parallel)
 #latency wait is in seconds: check the rules in the snakefile to adjust accordingly (latency wiat should be > longest expected run time for a job)
 #run entire pipeline
 snakemake --executor cluster-generic --cluster-generic-submit-cmd "sbatch -N {resources.nodes} -p {resources.slurm_partition} {resources.slurm_extra}" \
@@ -31,21 +31,3 @@ snakemake --executor cluster-generic --cluster-generic-submit-cmd "sbatch -N {re
 
 
 
-#### DEPRECATED: These don't really work the way I think they do, keeping around just in case
-
-#misc nohup commands
-nohup snakemake --executor cluster-generic --cluster-generic-submit-cmd "sbatch -N {resources.nodes} -p {resources.slurm_partition} {resources.slurm_extra}" \
---cluster-generic-cancel-cmd scancel --use-conda --jobs 64 --immediate-submit --notemp --printshellcmds --latency-wait 3600 > snakemake.out &
-
-#list all jobs: you can get the process id from here and check specific process details
-jobs -l
-
-#check process
-ps $(processNumber)
-
-#other run commands tested
-snakemake --executor cluster-generic --cluster-generic-submit-cmd "sbatch -N {resources.nodes} -p {resources.slurm_partition} {resources.slurm_extra} $(./parseJobID.sh {dependencies})" \
---cluster-generic-cancel-cmd scancel --use-conda --jobs 64 --immediate-submit --notemp --printshellcmds
-
-snakemake --executor slurm --default-resources slurm_account=bio230047p \
- --use-conda --jobs 64 --notemp --immediate-submit --printshellcmds

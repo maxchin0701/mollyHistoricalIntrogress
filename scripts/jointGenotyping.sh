@@ -19,7 +19,7 @@ gatk GenotypeGVCFs \
 
 #filter vcf
 bcftools filter \
-	-i 'QUAL>30 & FORMAT/DP[0-]>5 && Type="snp"' \
+	-i 'QUAL>30 & MIN(FORMAT/DP[0-])>5 && Type="snp"' \
 	"${snakemake_output[0]}" | \
 	bcftools view -m2 -M2 -v snps -o "${snakemake_output[1]}"
 
