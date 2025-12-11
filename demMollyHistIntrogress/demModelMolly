@@ -1,0 +1,253 @@
+#import pandas 
+import pandas as pd
+
+#load in dataframes
+#pops=pd.read_csv("data/pops.tsv", sep='\t')
+models=pd.read_csv("data/models.tsv",sep='\t')
+modelsNoAM=pd.read_csv("data/modelsNoAM.tsv",sep='\t')
+modelsAll=pd.concat([models,modelsNoAM],axis=0)
+nIter=101
+
+#ruleAll
+rule all:
+    input:
+        expand("data/{modelAM}/iter{iter}/{modelAM}/{modelAM}_maxL.par",modelAM=models["MODELS"],iter=list(range(1,101))),
+        expand("data/{modelAM}/iter{iter}/{modelAM}/{modelAM}.bestlhoods",modelAM=models["MODELS"],iter=list(range(1,101))),
+        expand("data/{modelNoAM}/iter{iter}/{modelNoAM}/{modelNoAM}_maxL.par",modelNoAM=modelsNoAM["MODELS"],iter=list(range(1,101))),
+        expand("data/{modelNoAM}/iter{iter}/{modelNoAM}/{modelNoAM}.bestlhoods",modelNoAM=modelsNoAM["MODELS"],iter=list(range(1,101))),
+        expand("data/{model}/bestIter/{model}.lhoods",model=modelsAll["MODELS"]),
+        expand("data/{model}/bestIter/{model}.AIC",model=modelsAll["MODELS"]),
+
+#constrain wildcards
+wildcard_constraints:
+    modelNoAM=".*NoAM.*",
+    modelAM="(?!.*NoAM).*"
+
+#combine chromosome VCF files
+rule combineChrVCF:
+    priority: 7
+    input:
+        "data/chrHaps.list",
+        "data/refGenome/PForHapMex.dict",
+        "data/samps.args",
+    resources:
+        slurm_partition="RM-shared",
+        nodes=1,
+        runtime=300,
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=10 -o scriptOuts/combineChrVCF -t 5:00:00",
+    output:
+        "data/combinedHap/chrAllCombinedFilt.vcf.gz",
+        "data/combinedHap/chrSymParHybCombinedFilt.vcf.gz",
+    threads: 10
+    log: 
+        "data/combinedHap/combineChrVCF.log"
+    script:
+        "scripts/combineChrVCF.sh"
+        
+rule combineChrVCFNoAM:
+    priority: 7
+    input:
+        "data/chrHaps.list",
+        "data/refGenome/PForHapMex.dict",
+        "data/sampsNoAM.args",
+    resources:
+        slurm_partition="RM-shared",
+        nodes=1,
+        runtime=300,
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=10 -o scriptOuts/combineChrVCF -t 5:00:00",
+    output:
+        "data/combinedHap/chrAllCombinedFilt.vcf.gz",
+        "data/combinedHap/chrSymParCombinedFilt.vcf.gz",
+    threads: 10
+    log: 
+        "data/combinedHap/combineChrVCF.log"
+    script:
+        "scripts/combineChrVCFNoAM.sh"
+
+rule getSFS:
+    priority: 6
+    input:
+        inVCF="data/combinedHap/chrSymParHybCombinedFilt.vcf.gz",
+        pops="data/pops.tsv",
+    params:
+        nSampPop0=8,
+        nSampPop1=38,
+        nSampPop2=4,
+    resources:
+        slurm_partition="RM-shared",
+        nodes=1,
+        runtime=60,
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=10 -o scriptOuts/getSFS -t 1:00:00",
+    output:
+        "data/sfs/fastsimcoal2/demModelMolly_jointMAFpop1_0.obs",
+        "data/sfs/fastsimcoal2/demModelMolly_jointMAFpop2_1.obs",
+        "data/sfs/fastsimcoal2/demModelMolly_jointMAFpop2_0.obs",
+    threads: 10
+    log: 
+        "data/sfs/getSFS.log"
+    script:
+        "scripts/getSFS.sh"
+
+rule getSFSNoAM:
+    priority: 6
+    input:
+        inVCF="data/combinedHap/chrSymParCombinedFilt.vcf.gz",
+        pops="data/popsNoAM.tsv",
+    params:
+        nSampPop0=8,
+        nSampPop1=4,
+    resources:
+        slurm_partition="RM-shared",
+        nodes=1,
+        runtime=60,
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=10 -o scriptOuts/getSFSNoAM -t 1:00:00",
+    output:
+        "data/sfsNoAM/fastsimcoal2/demModelMolly_jointMAFpop1_0.obs",
+    threads: 10
+    log: 
+        "data/sfsNoAM/getSFSNoAM.log"
+    script:
+        "scripts/getSFSNoAM.sh"
+
+rule moveSFS:
+    priority: 5
+    input:
+        "data/sfs/fastsimcoal2/demModelMolly_jointMAFpop1_0.obs",
+        "data/sfs/fastsimcoal2/demModelMolly_jointMAFpop2_1.obs",
+        "data/sfs/fastsimcoal2/demModelMolly_jointMAFpop2_0.obs",
+        "data/{modelAM}/{modelAM}.tpl",
+    resources:
+        slurm_partition="RM-shared",
+        nodes=1,
+        runtime=60,
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=1 -o scriptOuts/moveSFS_{wildcards.modelAM} -t 1:00:00",
+    output:
+        "data/{modelAM}/{modelAM}_jointMAFpop1_0.obs",
+        "data/{modelAM}/{modelAM}_jointMAFpop2_0.obs",
+        "data/{modelAM}/{modelAM}_jointMAFpop2_1.obs",
+    threads: 1
+    log:
+        "data/{modelAM}/moveSFS_{modelAM}.log"
+    script:
+        "scripts/moveSFS.sh"
+        
+rule moveSFSNoAM:
+    priority: 5
+    input:
+        "data/sfsNoAM/fastsimcoal2/demModelMolly_jointMAFpop1_0.obs",
+        "data/{modelNoAM}/{modelNoAM}.tpl",
+    resources:
+        slurm_partition="RM-shared",
+        nodes=1,
+        runtime=60,
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=1 -o scriptOuts/moveSFSNoAM_{wildcards.modelNoAM} -t 1:00:00",
+    output:
+        "data/{modelNoAM}/{modelNoAM}_jointMAFpop1_0.obs",
+    threads: 1
+    log:
+        "data/{modelNoAM}/moveSFSNoAM_{modelNoAM}.log"
+    script:
+        "scripts/moveSFSNoAM.sh"
+        
+rule runFSCInitial:
+    priority: 4
+    input:
+        "data/{modelAM}/{modelAM}_jointMAFpop1_0.obs",
+        "data/{modelAM}/{modelAM}_jointMAFpop2_0.obs",
+        "data/{modelAM}/{modelAM}_jointMAFpop2_1.obs",
+        "data/{modelAM}/{modelAM}.tpl",
+    resources:
+        slurm_partition="RM-shared",
+        nodes=1,
+        runtime=4320,
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=4 -o scriptOuts/runFSCInitial_{wildcards.modelAM}_{wildcards.iter} -t 72:00:00",
+    output:
+        "data/{modelAM}/iter{iter}/{modelAM}/{modelAM}_maxL.par",
+        "data/{modelAM}/iter{iter}/{modelAM}/{modelAM}.bestlhoods",
+    threads: 4
+    retries: 5
+    log:
+        "data/{modelAM}/iter{iter}/runFSCInitial_{modelAM}_{iter}.log"
+    script:
+        "scripts/runFSCInitial.sh"
+
+rule runFSCInitialNoAM:
+    priority: 4
+    input:
+        "data/{modelNoAM}/{modelNoAM}_jointMAFpop1_0.obs",
+        "data/{modelNoAM}/{modelNoAM}.tpl",
+    resources:
+        slurm_partition="RM-shared",
+        nodes=1,
+        runtime=4320,
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=4 -o scriptOuts/runFSCInitialNoAM_{wildcards.modelNoAM}_{wildcards.iter} -t 72:00:00",
+    output:
+        "data/{modelNoAM}/iter{iter}/{modelNoAM}/{modelNoAM}_maxL.par",
+        "data/{modelNoAM}/iter{iter}/{modelNoAM}/{modelNoAM}.bestlhoods",
+    threads: 4
+    retries: 5
+    log:
+        "data/{modelNoAM}/iter{iter}/runFSCInitialNoAM_{modelNoAM}_{iter}.log"
+    script:
+        "scripts/runFSCInitialNoAM.sh"
+
+rule getBestRun:
+    priority: 3
+    input:
+        expand("data/{{model}}/iter{iter}/{{model}}/{{model}}_maxL.par",iter=list(range(1,101))),
+        expand("data/{{model}}/iter{iter}/{{model}}/{{model}}.bestlhoods",iter=list(range(1,101))),
+    resources:
+        slurm_partition="RM-shared",
+        nodes=1,
+        runtime=60,
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=1 -o scriptOuts/getBestRun_{wildcards.model} -t 1:00:00",
+    output:
+        "data/{model}/bestIter/{model}/{model}_maxL.par",
+        "data/{model}/bestIter/{model}/{model}.bestlhoods",
+        #"data/{model}/bestIter/{model}_temp.lhoods",
+    threads: 1
+    log:
+        "data/{model}/bestIter/getBestRun.log"
+    script:
+        "scripts/saveBestModel.sh"
+
+rule runFSCLhood:
+    priority: 2
+    input:
+        "data/{model}/bestIter/{model}/{model}_maxL.par",
+        "data/{model}/bestIter/{model}/{model}.bestlhoods",
+        "data/{model}/bestIter/{model}_temp.lhoods",
+    resources:
+        slurm_partition="RM-shared",
+        nodes=1,
+        runtime=600,
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=4 -o scriptOuts/runFSCLhood_{wildcards.model} -t 10:00:00",
+    output:
+        "data/{model}/bestIter/{model}.lhoods"
+    threads: 4
+    log:
+        "data/{model}/bestIter/runFSCLhood.log"
+    script:
+        "scripts/runFSCLhood.sh"
+        
+rule getAIC:
+    priority: 1
+    input:
+        "data/{model}/bestIter/{model}/{model}.bestlhoods",
+    resources:
+        slurm_partition="RM-shared",
+        nodes=1,
+        runtime=60,
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=4 -o scriptOuts/getAIC_{wildcards.model} -t 1:00:00",
+    output:
+        "data/{model}/bestIter/{model}.AIC"
+    threads: 4
+    log:
+        "data/{model}/bestIter/getAIC_{model}.log"
+    script:
+        "scripts/calculateAIC.R"
+
+        
+        
+        
+

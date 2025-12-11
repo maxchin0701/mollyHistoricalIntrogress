@@ -1,0 +1,6 @@
+(((PMex:0.1,PForHapMex:0.1)AncPForHapMex:2.6,(PLat:0.1,PForHaplat:0.1)AncPForHapLat:2.6)AncPLatPMex:3.3,PRet:6.0)AncPoe;
+PMex /ocean/projects/bio230047p/mchin/AGRHistIntrogress/data/maskAssembly/PMexMask/PMex.fasta.masked
+PForHapMex /ocean/projects/bio230047p/mchin/AGRHistIntrogress/data/maskAssembly/PForHapMexMask/PForHapMex.fasta.masked
+PLat /ocean/projects/bio230047p/mchin/AGRHistIntrogress/data/maskAssembly/PLatMask/PLat.fasta.masked
+PForHaplat /ocean/projects/bio230047p/mchin/AGRHistIntrogress/data/maskAssembly/PForHapLatMask/PForHapLat.fasta.masked
+PRet /ocean/projects/bio230047p/mchin/AGRHistIntrogress/data/maskAssembly/PRetMask/PRet.fasta.masked

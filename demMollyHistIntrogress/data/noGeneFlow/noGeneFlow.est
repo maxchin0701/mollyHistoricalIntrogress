@@ -1,0 +1,11 @@
+// Priors and rules file
+// *********************
+
+[PARAMETERS]
+//#isInt? #name   #dist.#min  #max
+//all Ns are in number of haploid individuals
+0 	PFORMIGCUR 	logunif 	0.00001	0.01	output
+1	NPLAT	logunif	10000	1000000	output
+1	NPFOR	logunif	10000	1000000	output
+1	NPMEX	logunif	10000 	1000000	output
+1 	NANC 	logunif 10000 	1000000 	output
