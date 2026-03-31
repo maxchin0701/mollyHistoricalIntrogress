@@ -297,12 +297,12 @@ rule callHaps:
         slurm_partition="RM-shared",
         nodes=1,
         runtime=900,
-        slurm_extra=lambda wildcards: f"--ntasks-per-node=10 -o scriptOuts/callHaps_{wildcards.sample}_{wildcards.chr} -t 15:00:00",
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=15 -o scriptOuts/callHaps_{wildcards.sample}_{wildcards.chr} -t 15:00:00",
     wildcard_constraints:
         chr="chr[0-9_]+",
     output:
         "data/hapCalls/{sample}/{sample}{chr}.vcf.gz",
-    threads: 10
+    threads: 15
     log: 
         "data/hapCalls/{sample}/callHaps_{sample}_{chr}.log"
     script:

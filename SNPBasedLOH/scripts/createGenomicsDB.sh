@@ -22,7 +22,6 @@ gatk GenomicsDBImport \
 	--sample-name-map "${snakemake_input[1]}" \
 	-L "${snakemake_input[2]}"
 
-
 #touch output file
 touch ${snakemake_output[0]}
 touch ${snakemake_output[1]}

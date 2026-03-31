@@ -4,7 +4,7 @@ library(viridisLite)
 library(grDevices)
 
 #### LOAD IN DATA ####
-chrs <- read.delim(paste0("../data/chrIndex.tsv"),
+chrs <- read.delim(paste0("../../SNPBasedLOH/data/chrIndex.tsv"),
            sep="\t",row.names = NULL,header = T)
 # colnames(genomeCN)[5:23] <- gsub(".","-",colnames(genomeCN)[5:23],
 #                                  fixed=T)
@@ -20,15 +20,15 @@ LOHRegions <- as.data.frame(matrix(NA,nrow=0,ncol=4))
 LOHAnc <- as.data.frame(matrix(NA,nrow=0,ncol=4))
 
 for(i in unique(chrs$CHR)){
-  if(inherits(try(read.delim(paste0("../output/LOHRegions/",i,"LOHRegions_GQ",cutoffGQ,"_DP",cutoffDP,"_",parentalSpecies,".tsv"),sep="\t")), "try-error") ||
-     inherits(try(read.delim(paste0("../output/LOHAnc/",i,"LOHAnc_GQ",cutoffGQ,"_DP",cutoffDP,"_",parentalSpecies,".tsv"),sep="\t")), "try-error") ||
-     inherits(try(read.delim(paste0("../output/SNPall/",i,"SNPAll_GQ",cutoffGQ,"_DP",cutoffDP,"_",parentalSpecies,".tsv"),sep="\t")), "try-error"))
+  if(inherits(try(read.delim(paste0("../../SNPBasedLOH/output/LOHRegions/",i,"LOHRegions_GQ",cutoffGQ,"_DP",cutoffDP,"_",parentalSpecies,".tsv"),sep="\t")), "try-error") ||
+     inherits(try(read.delim(paste0("../../SNPBasedLOH/output/LOHAnc/",i,"LOHAnc_GQ",cutoffGQ,"_DP",cutoffDP,"_",parentalSpecies,".tsv"),sep="\t")), "try-error") ||
+     inherits(try(read.delim(paste0("../../SNPBasedLOH/output/SNPall/",i,"SNPAll_GQ",cutoffGQ,"_DP",cutoffDP,"_",parentalSpecies,".tsv"),sep="\t")), "try-error"))
     {
       next()
     } else {
-      curLOHRegions <- read.delim(paste0("../output/LOHRegions/",i,"LOHRegions_GQ",cutoffGQ,"_DP",cutoffDP,"_",parentalSpecies,".tsv"),sep="\t")
-      curLOHAnc <- read.delim(paste0("../output/LOHAnc/",i,"LOHAnc_GQ",cutoffGQ,"_DP",cutoffDP,"_",parentalSpecies,".tsv"),sep="\t")
-      curSNPall <- read.delim(paste0("../output/SNPall/",i,"SNPAll_GQ",cutoffGQ,"_DP",cutoffDP,"_",parentalSpecies,".tsv"),sep="\t")
+      curLOHRegions <- read.delim(paste0("../../SNPBasedLOH/output/LOHRegions/",i,"LOHRegions_GQ",cutoffGQ,"_DP",cutoffDP,"_",parentalSpecies,".tsv"),sep="\t")
+      curLOHAnc <- read.delim(paste0("../../SNPBasedLOH/output/LOHAnc/",i,"LOHAnc_GQ",cutoffGQ,"_DP",cutoffDP,"_",parentalSpecies,".tsv"),sep="\t")
+      curSNPall <- read.delim(paste0("../../SNPBasedLOH/output/SNPall/",i,"SNPAll_GQ",cutoffGQ,"_DP",cutoffDP,"_",parentalSpecies,".tsv"),sep="\t")
       LOHRegions <- rbind(LOHRegions,curLOHRegions)
       LOHAnc <- rbind(LOHAnc,curLOHAnc)
       SNPall <- rbind(SNPall,curSNPall)
