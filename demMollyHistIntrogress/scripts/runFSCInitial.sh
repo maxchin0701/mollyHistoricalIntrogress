@@ -10,7 +10,7 @@
 #pop2=Pmex
 
 #export fsc path
-export PATH=$PATH:/ocean/projects/bio230047p/mchin/software/fsc28_linux64
+export PATH=$PATH::/group/awhitehegrp/max/software/fsc28_linux64
 
 #load in variables
 iter=(${snakemake_wildcards[iter]})
@@ -25,6 +25,12 @@ cd iter${iter}
 if [ ! -f ${model}.est ]; then
 	ln -s ../${model}* .
 fi
+
+#remove sim output directory if it exists
+if [ -d ${model} ]; then
+    rm -rf ${model}
+fi
+
 
 #run fsc
 fsc28 -t ${model}.tpl -e ${model}.est -m -0 -C 10 -n 1000000 -L 100 -s 0 -M --logprecision 18 -c4 -B 8 -y 3 -q

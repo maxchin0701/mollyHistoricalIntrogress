@@ -10,23 +10,24 @@
 #pop2=Pmex
 
 #activate conda env
-module load anaconda3/2022.10
-conda activate easySFS
+source ~/.bashrc
+conda activate python3
 
-#export path
-export PATH=$PATH:/ocean/projects/bio230047p/mchin/software/easySFS
+pip list
 
 #get population
 #pop=(${snakemake_wildcards[popCombo]})
 inVCF=(${snakemake_input[inVCF]})
 pops=(${snakemake_input[pops]})
-nSampPop0=(${snakemake_params[nSampPop0]})
-nSampPop1=(${snakemake_params[nSampPop1]})
-nSampPop2=(${snakemake_params[nSampPop2]})
-
 
 #get real sfs
-easySFS.py -i ${inVCF} -p ${pops} --proj ${nSampPop0},${nSampPop1},${nSampPop2} -a --prefix demModelMolly -o data/sfs -f --order pop0,pop1,pop2
+python3.14 scripts/buildMixedSFS.py --inVCF ${inVCF} --inSampleMap ${pops} --pop1 pop1 --pop2 pop0 --outSFS ${snakemake_output[0]}
+python3.14 scripts/buildMixedSFS.py --inVCF ${inVCF} --inSampleMap ${pops} --pop1 pop2 --pop2 pop0 --outSFS ${snakemake_output[1]}
+python3.14 scripts/buildMixedSFS.py --inVCF ${inVCF} --inSampleMap ${pops} --pop1 pop2 --pop2 pop1 --outSFS ${snakemake_output[2]}
+python3.14 scripts/buildMixedSFS.py --inVCF ${inVCF} --inSampleMap ${pops} --pop1 pop3 --pop2 pop0 --outSFS ${snakemake_output[3]}
+python3.14 scripts/buildMixedSFS.py --inVCF ${inVCF} --inSampleMap ${pops} --pop1 pop3 --pop2 pop1 --outSFS ${snakemake_output[4]}
+python3.14 scripts/buildMixedSFS.py --inVCF ${inVCF} --inSampleMap ${pops} --pop1 pop3 --pop2 pop2 --outSFS ${snakemake_output[5]}
+
 
 #rename
 #mv data/sfs/${popCombo}/jointMAF${popCombo}.sfs data/sfs/${popCombo}/jointMAF${popCombo}.obs

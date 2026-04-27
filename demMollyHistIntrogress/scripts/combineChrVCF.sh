@@ -9,10 +9,11 @@
 #pop1=Pfor
 #pop2=Pmex
 
+#source module command
+source /etc/profile.d/modules.sh
+
 #activate conda env
-module load GATK
-module load anaconda3/2022.10
-conda activate genomics
+module load gatk/4.5.0.0
 
 #set bam list
 vcfList=(${snakemake_input[0]})
