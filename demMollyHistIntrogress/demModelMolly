@@ -5,7 +5,8 @@ import pandas as pd
 #pops=pd.read_csv("data/pops.tsv", sep='\t')
 models=pd.read_csv("data/models.tsv",sep='\t')
 modelsNoAM=pd.read_csv("data/modelsNoAM.tsv",sep='\t')
-modelsAll=pd.concat([models,modelsNoAM],axis=0)
+#modelsAll=pd.concat([models,modelsNoAM],axis=0)
+modelsAll=models
 chr_df = pd.read_csv("./data/chrIndex.tsv", sep="\t")
 samp_df = pd.read_csv("./data/sampsParHyb.tsv", sep='\t') 
 nIter=101
@@ -23,12 +24,12 @@ rule all:
 #constrain wildcards
 wildcard_constraints:
     modelNoAM=".*NoAM.*",
-    modelAM="(?!.*NoAM).*"
+    modelAM="(?!.*NoAM).*",
 
 rule subsampleFilterVCF:
-    priority: 13
+    priority: 14
     input:
-        "data/hapCalls/{chr}CombinedParHyb.vcf.gz",        
+        "data/hapCalls/{chr}CombinedParHyb.vcf.gz"        
     resources:
         slurm_partition="low",
         nodes=1,
@@ -36,7 +37,7 @@ rule subsampleFilterVCF:
         mem_mb=4000,
         slurm_extra=lambda wildcards: f"-D /group/awhitehegrp/max/demMollyHistIntrogress --ntasks-per-node=4 --mem=4G -o /group/awhitehegrp/max/demMollyHistIntrogress/scriptOuts/subsampleFilterVCF_{wildcards.chr} -t 1:00:00 --open-mode=truncate",
     output:
-        "data/hapCallParHybs/{chr}.vcf.gz",
+        "data/hapCallParHybs/{chr}.vcf.gz"
     threads: 4
     log:
         "data/hapCallParHybs/subsampleFilterVCF_{chr}.log"
@@ -45,9 +46,9 @@ rule subsampleFilterVCF:
         
 #subsample and filter vcf
 rule genRefPanel:
-    priority: 12
+    priority: 13
     input:
-        "data/hapCallParHybs/{chr}.vcf.gz",        
+        "data/hapCallParHybs/{chr}.vcf.gz"        
     resources:
         slurm_partition="low",
         nodes=1,
@@ -55,7 +56,7 @@ rule genRefPanel:
         mem_mb=4000,
         slurm_extra=lambda wildcards: f"-D /group/awhitehegrp/max/demMollyHistIntrogress --ntasks-per-node=4 --mem=4G -o /group/awhitehegrp/max/demMollyHistIntrogress/scriptOuts/genRefPanel_{wildcards.chr} -t 1:00:00 --open-mode=truncate",
     output:
-        "data/refPanel/{chr}WhatshapRefPanel.vcf.gz",
+        "data/refPanel/{chr}WhatshapRefPanel.vcf.gz"
     threads: 4
     log:
         "data/refPanel/genRefPanel_{chr}.log"
@@ -64,12 +65,12 @@ rule genRefPanel:
 
 #read based phasing with whatshap
 rule phaseSamps:
-    priority: 11
+    priority: 12
     input:
         "data/hapCallParHybs/{chr}.vcf.gz",  
-        "data/refPanel/{chr}WhatshapRefPanel.vcf.gz",
+        "data/refPanel/{chr}WhatshapRefPanel.vcf.gz"
     params:
-        ref="data/refGenome/PForHapMex.fasta"
+        ref="data/refGenome/PForHapMex.fasta",
     resources:
         slurm_partition="low",
         nodes=1,
@@ -78,7 +79,7 @@ rule phaseSamps:
         slurm_extra=lambda wildcards: f"-D /group/awhitehegrp/max/demMollyHistIntrogress --ntasks-per-node=8 --mem=16G -o /group/awhitehegrp/max/demMollyHistIntrogress/scriptOuts/phaseSamps_{wildcards.chr}_{wildcards.samp} -t 4:00:00 --open-mode=truncate",
     output:
         "data/phasedHapsWhatshap/{chr}_{samp}Phased.vcf.gz",
-        "data/phasedHapsWhatshap/{chr}_{samp}Phased.vcf.gz.tbi",
+        "data/phasedHapsWhatshap/{chr}_{samp}Phased.vcf.gz.tbi"
     log:
         "data/phasedHapsWhatshap/phaseSamps_{chr}_{samp}.log"
     script:
@@ -86,10 +87,10 @@ rule phaseSamps:
         
 #merge hybrids and parents separately
 rule mergeHybPars:
-    priority: 10
+    priority: 11
     input:
         expand("data/phasedHapsWhatshap/{{chr}}_{samp}Phased.vcf.gz",samp = samp_df["SAMPS"]),  
-        expand("data/phasedHapsWhatshap/{{chr}}_{samp}Phased.vcf.gz.tbi",samp = samp_df["SAMPS"]),  
+        expand("data/phasedHapsWhatshap/{{chr}}_{samp}Phased.vcf.gz.tbi",samp = samp_df["SAMPS"])
     resources:
         slurm_partition="low",
         nodes=1,
@@ -97,7 +98,7 @@ rule mergeHybPars:
         mem_mb=4000,
         slurm_extra=lambda wildcards: f"-D /group/awhitehegrp/max/demMollyHistIntrogress --ntasks-per-node=1 --mem=4G -o /group/awhitehegrp/max/demMollyHistIntrogress/scriptOuts/mergeHybPars_{wildcards.chr} -t 1:00:00 --open-mode=truncate",
     output:
-        "data/phasedHapsWhatshap/{chr}Phased.vcf.gz",
+        "data/phasedHapsWhatshap/{chr}Phased.vcf.gz"
     threads: 1
     log:
         "data/phasedHapsWhatshap/mergeHybPars_{chr}.log"
@@ -106,9 +107,9 @@ rule mergeHybPars:
 
 #filter vcf
 rule filtPhasedVCF:
-    priority: 9
+    priority: 10
     input:
-        "data/phasedHapsWhatshap/{chr}Phased.vcf.gz",
+        "data/phasedHapsWhatshap/{chr}Phased.vcf.gz"
     resources:
         slurm_partition="low",
         nodes=1,
@@ -116,7 +117,7 @@ rule filtPhasedVCF:
         mem_mb=4000,
         slurm_extra=lambda wildcards: f"-D /group/awhitehegrp/max/demMollyHistIntrogress --ntasks-per-node=1 --mem=4G -o /group/awhitehegrp/max/demMollyHistIntrogress/scriptOuts/filtPhasedVCF_{wildcards.chr} -t 1:00:00 --open-mode=truncate",
     output:
-        "data/phasedHapsWhatshap/{chr}PhasedFilt.vcf.gz",
+        "data/phasedHapsWhatshap/{chr}PhasedFilt.vcf.gz"
     threads: 1
     log:
         "data/phasedHapsWhatshap/filtPhasedVCF_{chr}.log"
@@ -125,12 +126,12 @@ rule filtPhasedVCF:
 
 #combine chromosome VCF files
 rule combineChrVCF:
-    priority: 8
+    priority: 9
     input:
         "data/chrHaps.list",
         "data/refGenome/PForHapMex.dict",
         "data/samps.args",
-        expand("data/phasedHapsWhatshap/{chr}PhasedFilt.vcf.gz",chr = chr_df["CHR"]),  
+        expand("data/phasedHapsWhatshap/{chr}PhasedFilt.vcf.gz",chr = chr_df["CHR"])
     resources:
         slurm_partition="low",
         nodes=1,
@@ -139,7 +140,7 @@ rule combineChrVCF:
         slurm_extra=lambda wildcards: f"-D /group/awhitehegrp/max/demMollyHistIntrogress --ntasks-per-node=10 --mem=20G -o /group/awhitehegrp/max/demMollyHistIntrogress/scriptOuts/combineChrVCF -t 5:00:00 --open-mode=truncate",
     output:
         "data/combinedHap/chrAllCombinedFilt.vcf.gz",
-        "data/combinedHap/chrSymParHybCombinedFilt.vcf.gz",
+        "data/combinedHap/chrSymParHybCombinedFilt.vcf.gz"
     threads: 10
     log: 
         "data/combinedHap/combineChrVCF.log"
@@ -148,9 +149,9 @@ rule combineChrVCF:
 
 #split vcf
 rule splitHaps:
-    priority: 7
+    priority: 8
     input:
-        "data/combinedHap/chrSymParHybCombinedFilt.vcf.gz",
+        "data/combinedHap/chrSymParHybCombinedFilt.vcf.gz"
     resources:
         slurm_partition="low",
         nodes=1,
@@ -158,12 +159,31 @@ rule splitHaps:
         mem_mb=20000,
         slurm_extra=lambda wildcards: f"-D /group/awhitehegrp/max/demMollyHistIntrogress --ntasks-per-node=8 --mem=20G -o /group/awhitehegrp/max/demMollyHistIntrogress/scriptOuts/splitHaps -t 2:00:00 --open-mode=truncate",
     output:
-        "data/splitHap/splitParHyb.vcf.gz",
+        "data/splitHap/splitParHyb.vcf.gz"
     threads: 10
     log: 
         "data/splitHap/splitHaps.log"
     script:
         "scripts/splitHaps.sh"
+
+#get partitions
+rule getPartitions:
+    priority: 7
+    input:
+        "data/splitHap/splitParHyb.vcf.gz"
+    resources:
+        slurm_partition="low",
+        nodes=1,
+        runtime=60,
+        mem_mb=20000,
+        slurm_extra=lambda wildcards: f"-D /group/awhitehegrp/max/demMollyHistIntrogress --ntasks-per-node=4 --mem=4G -o /group/awhitehegrp/max/demMollyHistIntrogress/scriptOuts/getPartitions_{wildcards.iter} -t 1:00:00 --open-mode=truncate",
+    output:
+        "data/splitHapPartitions/splitParHyb_{iter}.vcf.gz"
+    threads: 4
+    log:
+        "data/splitHapPartitions/getPartitions_{iter}"
+    script:
+        "scripts/getPartitions.sh"
 
 #combine chromosome VCF no AM
 rule combineChrVCFNoAM:
@@ -171,7 +191,7 @@ rule combineChrVCFNoAM:
     input:
         "data/chrHaps.list",
         "data/refGenome/PForHapMex.dict",
-        "data/sampsNoAM.args",
+        "data/sampsNoAM.args"
     resources:
         slurm_partition="low",
         nodes=1,
@@ -179,7 +199,7 @@ rule combineChrVCFNoAM:
         slurm_extra=lambda wildcards: f"--ntasks-per-node=10 -o scriptOuts/combineChrVCF -t 5:00:00",
     output:
         "data/combinedHap/chrAllCombinedFilt.vcf.gz",
-        "data/combinedHap/chrSymParCombinedFilt.vcf.gz",
+        "data/combinedHap/chrSymParCombinedFilt.vcf.gz"
     threads: 10
     log: 
         "data/combinedHap/combineChrVCF.log"
@@ -189,24 +209,24 @@ rule combineChrVCFNoAM:
 rule getSFS:
     priority: 6
     input:
-        inVCF="data/splitHap/splitParHyb.vcf.gz",
+        inVCF="data/splitHapPartitions/splitParHyb_{iter}.vcf.gz",
         pops="data/pops.tsv",
     resources:
         slurm_partition="low",
         nodes=1,
         runtime=360,
         mem_mb=8000,
-        slurm_extra=lambda wildcards: f"-D /group/awhitehegrp/max/demMollyHistIntrogress --ntasks-per-node=4 --mem=8G -o /group/awhitehegrp/max/demMollyHistIntrogress/scriptOuts/getSFS -t 6:00:00 --open-mode=truncate",
+        slurm_extra=lambda wildcards: f"-D /group/awhitehegrp/max/demMollyHistIntrogress --ntasks-per-node=4 --mem=8G -o /group/awhitehegrp/max/demMollyHistIntrogress/scriptOuts/getSFS_{wildcards.iter} -t 6:00:00 --open-mode=truncate",
     output:
-        "data/sfs/demModelMolly_jointMAFpop1_0.obs",
-        "data/sfs/demModelMolly_jointMAFpop2_0.obs",
-        "data/sfs/demModelMolly_jointMAFpop2_1.obs",
-        "data/sfs/demModelMolly_jointMAFpop3_0.obs",
-        "data/sfs/demModelMolly_jointMAFpop3_1.obs",
-        "data/sfs/demModelMolly_jointMAFpop3_2.obs",
-    threads: 10
+        "data/sfs/iter{iter}/demModelMolly_jointMAFpop1_0.obs",
+        "data/sfs/iter{iter}/demModelMolly_jointMAFpop2_0.obs",
+        "data/sfs/iter{iter}/demModelMolly_jointMAFpop2_1.obs",
+        "data/sfs/iter{iter}/demModelMolly_jointMAFpop3_0.obs",
+        "data/sfs/iter{iter}/demModelMolly_jointMAFpop3_1.obs",
+        "data/sfs/iter{iter}/demModelMolly_jointMAFpop3_2.obs"
+    threads: 4
     log: 
-        "data/sfs/getSFS.log"
+        "data/sfs/getSFS_{iter}.log"
     script:
         "scripts/getSFS.sh"
 
@@ -230,35 +250,6 @@ rule getSFSNoAM:
         "data/sfsNoAM/getSFSNoAM.log"
     script:
         "scripts/getSFSNoAM.sh"
-
-rule moveSFS:
-    priority: 5
-    input:
-        "data/sfs/demModelMolly_jointMAFpop1_0.obs",
-        "data/sfs/demModelMolly_jointMAFpop2_0.obs",
-        "data/sfs/demModelMolly_jointMAFpop2_1.obs",
-        "data/sfs/demModelMolly_jointMAFpop3_0.obs",
-        "data/sfs/demModelMolly_jointMAFpop3_1.obs",
-        "data/sfs/demModelMolly_jointMAFpop3_2.obs",
-        "data/{modelAM}/{modelAM}.tpl",
-    resources:
-        slurm_partition="low",
-        nodes=1,
-        runtime=60,
-        mem_mb=4000,
-        slurm_extra=lambda wildcards: f"-D /group/awhitehegrp/max/demMollyHistIntrogress --ntasks-per-node=1 --mem=4G -o scriptOuts/moveSFS_{wildcards.modelAM} -t 1:00:00 --open-mode=truncate",
-    output:
-        "data/{modelAM}/{modelAM}_jointMAFpop1_0.obs",
-        "data/{modelAM}/{modelAM}_jointMAFpop2_0.obs",
-        "data/{modelAM}/{modelAM}_jointMAFpop2_1.obs",
-        "data/{modelAM}/{modelAM}_jointMAFpop3_0.obs",
-        "data/{modelAM}/{modelAM}_jointMAFpop3_1.obs",
-        "data/{modelAM}/{modelAM}_jointMAFpop3_2.obs",
-    threads: 1
-    log:
-        "data/{modelAM}/moveSFS_{modelAM}.log"
-    script:
-        "scripts/moveSFS.sh"
         
 rule moveSFSNoAM:
     priority: 5
@@ -271,7 +262,7 @@ rule moveSFSNoAM:
         runtime=60,
         slurm_extra=lambda wildcards: f"--ntasks-per-node=1 -o scriptOuts/moveSFSNoAM_{wildcards.modelNoAM} -t 1:00:00",
     output:
-        "data/{modelNoAM}/{modelNoAM}_jointMAFpop1_0.obs",
+        "data/{modelNoAM}/{modelNoAM}_jointMAFpop1_0.obs"
     threads: 1
     log:
         "data/{modelNoAM}/moveSFSNoAM_{modelNoAM}.log"
@@ -281,17 +272,17 @@ rule moveSFSNoAM:
 rule runFSCInitial:
     priority: 4
     input:
-        "data/{modelAM}/{modelAM}_jointMAFpop1_0.obs",
-        "data/{modelAM}/{modelAM}_jointMAFpop2_0.obs",
-        "data/{modelAM}/{modelAM}_jointMAFpop2_1.obs",
-        "data/{modelAM}/{modelAM}_jointMAFpop3_0.obs",
-        "data/{modelAM}/{modelAM}_jointMAFpop3_1.obs",
-        "data/{modelAM}/{modelAM}_jointMAFpop3_2.obs",
+        "data/sfs/iter{iter}/demModelMolly_jointMAFpop1_0.obs",
+        "data/sfs/iter{iter}/demModelMolly_jointMAFpop2_0.obs",
+        "data/sfs/iter{iter}/demModelMolly_jointMAFpop2_1.obs",
+        "data/sfs/iter{iter}/demModelMolly_jointMAFpop3_0.obs",
+        "data/sfs/iter{iter}/demModelMolly_jointMAFpop3_1.obs",
+        "data/sfs/iter{iter}/demModelMolly_jointMAFpop3_2.obs",
         "data/{modelAM}/{modelAM}.tpl",
     resources:
         slurm_partition="low",
         nodes=1,
-        runtime=10080,
+        runtime=20160,
         mem_mb=8000,
         slurm_extra=lambda wildcards: f"-D /group/awhitehegrp/max/demMollyHistIntrogress --ntasks-per-node=4 --mem=8G -o scriptOuts/runFSCInitial_{wildcards.modelAM}_{wildcards.iter} -t 7-00:00:00 --open-mode=truncate",
     output:
@@ -328,20 +319,21 @@ rule runFSCInitialNoAM:
 rule getBestRun:
     priority: 3
     input:
-        expand("data/{{model}}/iter{iter}/{{model}}/{{model}}_maxL.par",iter=list(range(1,101))),
-        expand("data/{{model}}/iter{iter}/{{model}}/{{model}}.bestlhoods",iter=list(range(1,101))),
+        expand("data/{model}/iter{iter}/{model}/{model}_maxL.par",model=modelsAll["MODELS"],iter=list(range(1,101))),
+        expand("data/{model}/iter{iter}/{model}/{model}.bestlhoods",model=modelsAll["MODELS"],iter=list(range(1,101))),
     resources:
-        slurm_partition="RM-shared",
+        slurm_partition="low",
         nodes=1,
         runtime=60,
-        slurm_extra=lambda wildcards: f"--ntasks-per-node=1 -o scriptOuts/getBestRun_{wildcards.model} -t 1:00:00",
+        mem_mb=4000,
+        slurm_extra=lambda wildcards: f"-D /group/awhitehegrp/max/demMollyHistIntrogress --ntasks-per-node=1 --mem=4G -o /group/awhitehegrp/max/demMollyHistIntrogress/scriptOuts/getBestRun -t 1:00:00  --open-mode=truncate",
     output:
-        "data/{model}/bestIter/{model}/{model}_maxL.par",
-        "data/{model}/bestIter/{model}/{model}.bestlhoods",
-        "data/{model}/bestIter/{model}_temp.lhoods",
+        expand("data/{model}/bestIter/{model}/{model}_maxL.par",model=modelsAll["MODELS"]),
+        expand("data/{model}/bestIter/{model}/{model}.bestlhoods",model=modelsAll["MODELS"]),
+        expand("data/{model}/bestIter/{model}_temp.lhoods",model=modelsAll["MODELS"]),
     threads: 1
     log:
-        "data/{model}/bestIter/getBestRun.log"
+        "data/getBestRun.log"
     script:
         "scripts/saveBestModel.sh"
 
@@ -352,10 +344,11 @@ rule runFSCLhood:
         "data/{model}/bestIter/{model}/{model}.bestlhoods",
         "data/{model}/bestIter/{model}_temp.lhoods",
     resources:
-        slurm_partition="RM-shared",
+        slurm_partition="low",
         nodes=1,
         runtime=600,
-        slurm_extra=lambda wildcards: f"--ntasks-per-node=4 -o scriptOuts/runFSCLhood_{wildcards.model} -t 10:00:00",
+        mem_mb=4000,
+        slurm_extra=lambda wildcards: f"-D /group/awhitehegrp/max/demMollyHistIntrogress --ntasks-per-node=4 --mem=8G -o /group/awhitehegrp/max/demMollyHistIntrogress/scriptOuts/runFSCLhood_{wildcards.model} -t 10:00:00  --open-mode=truncate",
     output:
         "data/{model}/bestIter/{model}.lhoods"
     threads: 4
@@ -369,17 +362,18 @@ rule getAIC:
     input:
         "data/{model}/bestIter/{model}/{model}.bestlhoods",
     resources:
-        slurm_partition="RM-shared",
+        slurm_partition="low",
         nodes=1,
         runtime=60,
-        slurm_extra=lambda wildcards: f"--ntasks-per-node=4 -o scriptOuts/getAIC_{wildcards.model} -t 1:00:00",
+        mem_mb=1000,
+        slurm_extra=lambda wildcards: f"-D /group/awhitehegrp/max/demMollyHistIntrogress --ntasks-per-node=4 --mem=1G -o /group/awhitehegrp/max/demMollyHistIntrogress/scriptOuts/getAIC_{wildcards.model} -t 1:00:00 --open-mode=truncate",
     output:
         "data/{model}/bestIter/{model}.AIC"
     threads: 4
     log:
         "data/{model}/bestIter/getAIC_{model}.log"
     script:
-        "scripts/calculateAIC.R"
+        "scripts/calculateAIC.sh"
 
         
         

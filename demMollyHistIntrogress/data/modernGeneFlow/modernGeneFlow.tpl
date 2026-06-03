@@ -35,7 +35,7 @@ PARMIGCUR 0 0 0
 300000 2 3 1 1 0 1
 7800000 3 0 1 NANC 0 1 absoluteResize
 //Number of independent loci [chromosome]
-1 0
+58887 0
 //Per chromosome: Number of linkage blocks
 1
 //per Block: data type, num loci, rec. rate and mut rate + optional parameters

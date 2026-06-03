@@ -15,13 +15,13 @@ model=(${snakemake_wildcards[modelAM]})
 #get into right wd
 cd data/${model}
 
-#symlink
-ln -s ../sfs/demModelMolly_jointMAFpop1_0.obs ./${model}_jointMAFpop1_0.obs
-ln -s ../sfs/demModelMolly_jointMAFpop2_0.obs ./${model}_jointMAFpop2_0.obs
-ln -s ../sfs/demModelMolly_jointMAFpop2_1.obs ./${model}_jointMAFpop2_1.obs
-ln -s ../sfs/demModelMolly_jointMAFpop3_0.obs ./${model}_jointMAFpop3_0.obs
-ln -s ../sfs/demModelMolly_jointMAFpop3_1.obs ./${model}_jointMAFpop3_1.obs
-ln -s ../sfs/demModelMolly_jointMAFpop3_2.obs ./${model}_jointMAFpop3_2.obs
+#copy
+cp ../sfs/demModelMolly_jointMAFpop1_0.obs ./${model}_jointMAFpop1_0.obs
+cp ../sfs/demModelMolly_jointMAFpop2_0.obs ./${model}_jointMAFpop2_0.obs
+cp ../sfs/demModelMolly_jointMAFpop2_1.obs ./${model}_jointMAFpop2_1.obs
+cp ../sfs/demModelMolly_jointMAFpop3_0.obs ./${model}_jointMAFpop3_0.obs
+cp ../sfs/demModelMolly_jointMAFpop3_1.obs ./${model}_jointMAFpop3_1.obs
+cp ../sfs/demModelMolly_jointMAFpop3_2.obs ./${model}_jointMAFpop3_2.obs
 
 
 

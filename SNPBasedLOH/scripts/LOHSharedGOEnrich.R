@@ -7,6 +7,8 @@ library("biomaRt")
 ah <- AnnotationHub()
 PForOrgDB <- query(ah,c("Poecilia formosa", "OrgDB"))[[1]]
 
+AnnotationHub::query(ah,c("Poecilia","orgdb"))
+
 #### LOAD IN DATA ####
 genes <- read.delim(paste0("../output/LOHRegionsSharedCombined/LOHSharedGenes.tsv"),
                     sep="\t",row.names = NULL,header = F)

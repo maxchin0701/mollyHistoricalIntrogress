@@ -6,6 +6,7 @@ import pandas as pd
 samp_df = pd.read_csv("./data/sampleIndex.tsv", sep='\t') 
 samp_df_hifi = pd.read_csv("./data/sampleIndexHiFi.tsv", sep='\t') 
 sampPH_df = pd.read_csv("./data/sampleIndexParHyb.tsv", sep='\t') 
+sampP_df = pd.read_csv("./data/sampleIndexPar.tsv", sep='\t') 
 ref_df = pd.read_csv("./data/refInfo.tsv", sep="\t")
 chr_df = pd.read_csv("./data/chrIndex.tsv", sep="\t")
 filtCut_df = pd.read_csv("./data/filterCutoffs.tsv", sep="\t")
@@ -39,11 +40,13 @@ filtCutFinal_df=pd.DataFrame({"PARENTS": filtCutPar, "CHR": filtCutChrs, "GQ": f
 
 rule all:
     input:
+        expand("data/hapCalls/{chr}CombinedFiltParHyb.vcf.gz",zip,chr = filtCutFinal_df["CHR"]),
+        expand("data/hapCalls/{chr}CombinedFiltPar.vcf.gz",zip,chr = filtCutFinal_df["CHR"]),
         expand("output/LOHRegions/{chr}LOHRegions_GQ{gqcut}_DP{dpcut}_{pars}.tsv",zip,pars = filtCutFinal_df["PARENTS"],chr = filtCutFinal_df["CHR"],gqcut = filtCutFinal_df["GQ"],dpcut = filtCutFinal_df["DP"]),
         expand("output/LOHAnc/{chr}LOHAnc_GQ{gqcut}_DP{dpcut}_{pars}.tsv",zip, pars = filtCutFinal_df["PARENTS"], chr = filtCutFinal_df["CHR"],gqcut = filtCutFinal_df["GQ"],dpcut = filtCutFinal_df["DP"]),
         expand("output/SNPall/{chr}SNPall_GQ{gqcut}_DP{dpcut}_{pars}.tsv",zip, pars = filtCutFinal_df["PARENTS"], chr = filtCutFinal_df["CHR"],gqcut = filtCutFinal_df["GQ"],dpcut = filtCutFinal_df["DP"]),
         expand("output/fixDiffVCF/{chr}FixDiff_GQ{gqcut}_DP{dpcut}_{pars}.vcf.gz", zip, pars = filtCutFinal_df["PARENTS"], chr = filtCutFinal_df["CHR"],gqcut = filtCutFinal_df["GQ"],dpcut = filtCutFinal_df["DP"]),
-        expand("output/haplostrips/haplostrips_{chr}_GQ{gqcut}_DP{dpcut}_{pars}.pdf",zip, pars = filtCutFinal_df["PARENTS"], chr = filtCutFinal_df["CHR"],gqcut = filtCutFinal_df["GQ"],dpcut = filtCutFinal_df["DP"]),
+        #expand("output/haplostrips/haplostrips_{chr}_GQ{gqcut}_DP{dpcut}_{pars}.pdf",zip, pars = filtCutFinal_df["PARENTS"], chr = filtCutFinal_df["CHR"],gqcut = filtCutFinal_df["GQ"],dpcut = filtCutFinal_df["DP"]),
         "data/gCNV/gCNV/processedGCNV.tsv",
 
 #constrain chromosome wildcard
@@ -59,7 +62,7 @@ rule prefetchSRA:
         slurm_partition="RM-shared",
         nodes=1,
         runtime=60,
-        slurm_extra=lambda wildcards: f"--ntasks-per-node=10 -o scriptOuts/prefetchSRA_{wildcards.sample} -t 1:00:00",
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=10 -o scriptOuts/prefetchSRA_{wildcards.sample} -t 3:00:00",
     output:
         "data/rawSeq/{sample}/{sample}.sra",
     threads: 10
@@ -77,7 +80,7 @@ rule prefetchSRAHiFi:
         slurm_partition="RM-shared",
         nodes=1,
         runtime=60,
-        slurm_extra=lambda wildcards: f"--ntasks-per-node=10 -o scriptOuts/prefetchSRAHiFi_{wildcards.sample_hifi} -t 1:00:00",
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=10 -o scriptOuts/prefetchSRAHiFi_{wildcards.sample_hifi} -t 2:00:00",
     output:
         "data/rawSeq/{sample_hifi}/{sample_hifi}_HiFi.sra",
     threads: 10
@@ -138,7 +141,7 @@ rule trimFastq:
         slurm_partition="RM-shared",
         nodes=1,
         runtime=90,
-        slurm_extra=lambda wildcards: f"--ntasks-per-node=8 -o scriptOuts/trimFastq_{wildcards.sample} -t 1:30:00",
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=8 -o scriptOuts/trimFastq_{wildcards.sample} -t 3:00:00",
     output:
         "data/trimSeq/{sample}/{sample}_forward_paired.fastq.gz",
         "data/trimSeq/{sample}/{sample}_reverse_paired.fastq.gz",
@@ -297,7 +300,7 @@ rule callHaps:
         slurm_partition="RM-shared",
         nodes=1,
         runtime=900,
-        slurm_extra=lambda wildcards: f"--ntasks-per-node=15 -o scriptOuts/callHaps_{wildcards.sample}_{wildcards.chr} -t 15:00:00",
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=24 -o scriptOuts/callHaps_{wildcards.sample}_{wildcards.chr} -t 15:00:00",
     wildcard_constraints:
         chr="chr[0-9_]+",
     output:
@@ -351,25 +354,65 @@ rule determinePloidy:
         "scripts/ploidyAll.sh"
 
 #write sample_map 
-rule createSampleMap:
+rule createSampleMapAll:
     priority: 5
     input:
         sampVCF=expand("data/hapCalls/{sample}/{sample}{{chr}}.vcf.gz",sample = samp_df["NAME"].unique()),
         sampVCFHiFi=expand("data/hapCalls/{sample_hifi}/{sample_hifi}{{chr}}-hifi.vcf.gz",sample_hifi = samp_df_hifi["NAME"].unique()),
     params:
         sampNames=samp_df_all["NAME"].unique(),
-        sampNamesParHyb=sampPH_df["NAME"].unique(),
     resources:
         slurm_partition="RM-shared",
         nodes=1,
         runtime=60,
-        slurm_extra=lambda wildcards: f"--ntasks-per-node=1 -o scriptOuts/createSampleMap_{wildcards.chr} -t 1:00:00",
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=1 -o scriptOuts/createSampleMapAll_{wildcards.chr} -t 1:00:00",
     output:
         "data/hapCalls/allSamps_{chr}.sample_map",
+    threads: 1
+    log: 
+        "data/hapCalls/createSampleMapAll_{chr}.log"
+    script:
+        "scripts/createSampleMap.sh"
+
+#create sample map for parent-hybrids
+rule createSampleMapParHyb:
+    priority: 5
+    input:
+        sampVCF=expand("data/hapCalls/{sample}/{sample}{{chr}}.vcf.gz",sample = samp_df["NAME"].unique()),
+        sampVCFHiFi=expand("data/hapCalls/{sample_hifi}/{sample_hifi}{{chr}}-hifi.vcf.gz",sample_hifi = samp_df_hifi["NAME"].unique()),
+    params:
+        sampNames=sampPH_df["NAME"].unique(),
+    resources:
+        slurm_partition="RM-shared",
+        nodes=1,
+        runtime=60,
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=1 -o scriptOuts/createSampleMapParHyb_{wildcards.chr} -t 1:00:00",
+    output:
         "data/hapCalls/parHybSamps_{chr}.sample_map",
     threads: 1
     log: 
-        "data/hapCalls/createSampleMap_{chr}.log"
+        "data/hapCalls/createSampleMapParHyb_{chr}.log"
+    script:
+        "scripts/createSampleMap.sh"
+        
+#create sample map for parents
+rule createSampleMapPars:
+    priority: 5
+    input:
+        sampVCF=expand("data/hapCalls/{sample}/{sample}{{chr}}.vcf.gz",sample = samp_df["NAME"].unique()),
+        sampVCFHiFi=expand("data/hapCalls/{sample_hifi}/{sample_hifi}{{chr}}-hifi.vcf.gz",sample_hifi = samp_df_hifi["NAME"].unique()),
+    params:
+        sampNames=sampP_df["NAME"].unique(),
+    resources:
+        slurm_partition="RM-shared",
+        nodes=1,
+        runtime=60,
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=1 -o scriptOuts/createSampleMapPars_{wildcards.chr} -t 1:00:00",
+    output:
+        "data/hapCalls/parSamps_{chr}.sample_map",
+    threads: 1
+    log: 
+        "data/hapCalls/createSampleMapPars_{chr}.log"
     script:
         "scripts/createSampleMap.sh"
         
@@ -393,25 +436,66 @@ rule callGCNV:
         "scripts/gCNVAll.sh"
 
 #create genomicsDB database 
-rule createGenomicsDB:
+rule createGenomicsDBAll:
     priority: 4
     input:
         "data/hapCalls/allSamps_{chr}.sample_map",
-        "data/hapCalls/parHybSamps_{chr}.sample_map",
         "data/refGenome/intervalLists/PFor_{chr}.interval_list",
+    params:
+        DB="All",
     resources:
         slurm_partition="RM-shared",
         nodes=1,
         runtime=600,
-        slurm_extra=lambda wildcards: f"--ntasks-per-node=10 -o scriptOuts/createGenomicsDB_{wildcards.chr} -t 10:00:00",
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=10 -o scriptOuts/createGenomicsDBAll_{wildcards.chr} -t 10:00:00",
     output:
         "data/hapCalls/genDBAllExists_{chr}.txt",
+    threads: 10
+    log: 
+        "data/hapCalls/createGenomicsDBAll_{chr}.log"
+    script:
+        "scripts/createGenomicsDB.sh"
+
+rule createGenomicsDBParHyb:
+    priority: 4
+    input:
+        "data/hapCalls/parHybSamps_{chr}.sample_map",
+        "data/refGenome/intervalLists/PFor_{chr}.interval_list",
+    params:
+        DB="ParHyb",
+    resources:
+        slurm_partition="RM-shared",
+        nodes=1,
+        runtime=600,
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=10 -o scriptOuts/createGenomicsDBParHyb_{wildcards.chr} -t 10:00:00",
+    output:
         "data/hapCalls/genDBParHybExists_{chr}.txt",
     threads: 10
     log: 
-        "data/hapCalls/createGenomicsDB_{chr}.log"
+        "data/hapCalls/createGenomicsDBParHyb_{chr}.log"
     script:
         "scripts/createGenomicsDB.sh"
+
+rule createGenomicsDBPar:
+    priority: 4
+    input:
+        "data/hapCalls/parSamps_{chr}.sample_map",
+        "data/refGenome/intervalLists/PFor_{chr}.interval_list",
+    params:
+        DB="Pars",
+    resources:
+        slurm_partition="RM-shared",
+        nodes=1,
+        runtime=600,
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=10 -o scriptOuts/createGenomicsDBPar_{wildcards.chr} -t 10:00:00",
+    output:
+        "data/hapCalls/genDBParExists_{chr}.txt",
+    threads: 10
+    log: 
+        "data/hapCalls/createGenomicsDBPar_{chr}.log"
+    script:
+        "scripts/createGenomicsDB.sh"
+
         
 #process gCNV
 rule processGCNV:
@@ -433,30 +517,70 @@ rule processGCNV:
 
 
 #perform joint genotyping
-rule jointGenotyping:
+rule jointGenotypingAll:
     priority: 3
     input:
         "data/hapCalls/genDBAllExists_{chr}.txt",
-        "data/hapCalls/genDBParHybExists_{chr}.txt",
         ref=ref_df.iloc[0,1],
     params:
         genDBDir=lambda wildcards: "data/hapCalls/genDB_All_" + wildcards.chr,
+    resources:
+        slurm_partition="RM-shared",
+        nodes=1,
+        runtime=600,
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=10 -o scriptOuts/jointGenotypingAll_{wildcards.chr} -t 10:00:00",
+    output:
+        "data/hapCalls/{chr}CombinedAll.vcf.gz",
+        "data/hapCalls/{chr}CombinedFiltAll.vcf.gz",
+    threads: 10
+    log:
+        "data/hapCalls/jointGenotypingAll_{chr}.log"
+    script:
+        "scripts/jointGenotypingAll.sh"
+        
+#perform joint genotyping
+rule jointGenotypingParHyb:
+    priority: 3
+    input:
+        "data/hapCalls/genDBParHybExists_{chr}.txt",
+        ref=ref_df.iloc[0,1],
+    params:
         genDBParHybDir=lambda wildcards: "data/hapCalls/genDB_ParHyb_" + wildcards.chr,
     resources:
         slurm_partition="RM-shared",
         nodes=1,
         runtime=600,
-        slurm_extra=lambda wildcards: f"--ntasks-per-node=10 -o scriptOuts/jointGenotyping_{wildcards.chr} -t 10:00:00",
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=10 -o scriptOuts/jointGenotypingParHyb_{wildcards.chr} -t 10:00:00",
     output:
-        "data/hapCalls/{chr}CombinedAll.vcf.gz",
         "data/hapCalls/{chr}CombinedParHyb.vcf.gz",
-        "data/hapCalls/{chr}CombinedFiltAll.vcf.gz",
         "data/hapCalls/{chr}CombinedFiltParHyb.vcf.gz",
     threads: 10
     log:
         "data/hapCalls/jointGenotyping_{chr}.log"
     script:
-        "scripts/jointGenotyping.sh"
+        "scripts/jointGenotypingParHyb.sh"
+        
+#perform joint genotyping
+rule jointGenotypingPar:
+    priority: 3
+    input:
+        "data/hapCalls/genDBParExists_{chr}.txt",
+        ref=ref_df.iloc[0,1],
+    params:
+        genDBParDir=lambda wildcards: "data/hapCalls/genDB_Pars_" + wildcards.chr,
+    resources:
+        slurm_partition="RM-shared",
+        nodes=1,
+        runtime=600,
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=10 -o scriptOuts/jointGenotypingPar_{wildcards.chr} -t 10:00:00",
+    output:
+        "data/hapCalls/{chr}CombinedPar.vcf.gz",
+        "data/hapCalls/{chr}CombinedFiltPar.vcf.gz",
+    threads: 10
+    log:
+        "data/hapCalls/jointGenotyping_{chr}.log"
+    script:
+        "scripts/jointGenotypingPar.sh"
 
 #run Rscript to collect LOH regions
 rule collectLOH:

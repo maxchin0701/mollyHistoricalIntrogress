@@ -83,6 +83,9 @@ for(i in 1:nrow(LOHRegions)){
   LOHRegions$col[i] <- nSampCols[which(1:19 == LOHRegions$group[i])]
 }
 
+#subset to just large regions
+LOHRegions <- LOHRegions[which(LOHRegions$intSize >= 1000),]
+
 #loop through and add color to anc df
 for(i in 1:nrow(LOHAnc)){
   LOHAnc$col[i] <- ancCols[which(c("plat","mix","pmex") == LOHAnc$group[i])]

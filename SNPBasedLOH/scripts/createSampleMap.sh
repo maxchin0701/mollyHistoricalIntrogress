@@ -11,9 +11,7 @@ conda activate genomics
 
 #save variables
 sampN=${snakemake_params[sampNames]}
-sampPHN=${snakemake_params[sampNamesParHyb]}
 out=${snakemake_output[0]}
-outPH=${snakemake_output[1]}
 
 #loop through and build file for all samps
 for samp in $sampN; do
@@ -25,13 +23,6 @@ for samp in $sampN; do
 	printf "%s\t%s\n" "$samp" "$filePath" >> "$out"
 done
 
-#loop through and build file for all samps
-for samp in $sampPHN; do
-	if [ "$samp" = "Psul" ] || [ "$samp" = "Pme_sul" ]; then
-		mv data/hapCalls/$samp\/$samp"${snakemake_wildcards[chr]}"\-hifi.vcf.gz data/hapCalls/$samp\/$samp"${snakemake_wildcards[chr]}"\.vcf.gz
-		mv data/hapCalls/$samp\/$samp"${snakemake_wildcards[chr]}"\-hifi.vcf.gz.tbi data/hapCalls/$samp\/$samp"${snakemake_wildcards[chr]}"\.vcf.gz.tbi
-	fi
-	filePath=data/hapCalls/$samp\/$samp"${snakemake_wildcards[chr]}"\.vcf.gz
-	printf "%s\t%s\n" "$samp" "$filePath" >> "$outPH"
-done
+
+
 

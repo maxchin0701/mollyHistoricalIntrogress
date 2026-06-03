@@ -13,12 +13,16 @@
 source ~/.bashrc
 conda activate python3
 
-pip list
-
 #get population
 #pop=(${snakemake_wildcards[popCombo]})
 inVCF=(${snakemake_input[inVCF]})
 pops=(${snakemake_input[pops]})
+iter=(${snakemake_wildcards[iter]})
+
+#create sfs dir if it doesn't exist
+if [ ! -d data/sfs/iter${iter} ]; then
+	mkdir data/sfs/iter${iter}
+fi
 
 #get real sfs
 python3.14 scripts/buildMixedSFS.py --inVCF ${inVCF} --inSampleMap ${pops} --pop1 pop1 --pop2 pop0 --outSFS ${snakemake_output[0]}

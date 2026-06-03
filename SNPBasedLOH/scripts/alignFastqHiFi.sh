@@ -20,7 +20,7 @@ if [ ! -d "data/aligned/"${snakemake_wildcards[sample_hifi]}"" ]; then
 fi
 
 #do alignment
-minimap2 -ax map-hifi \
+minimap2 -ax asm20 -k15 -w10 \
 	-t 35 \
 	"${snakemake_input[ref]}" "${snakemake_input[reads]}" > data/aligned/"${snakemake_wildcards[sample_hifi]}"/"${snakemake_wildcards[sample_hifi]}"\.sam
 

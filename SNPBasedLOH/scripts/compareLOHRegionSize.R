@@ -8,7 +8,7 @@ LOHRegions <- read.delim(paste0("../../SNPBasedLOH/output/LOHRegions/LOHRegionsA
                          sep="\t")
 
 #### SEPARATE OUT OVERLAPPING AND NONOVERLAPPING ####
-LOHRegionsIsolated <- LOHRegions[which(LOHRegions$group <= 5 & 
+LOHRegionsIsolated <- LOHRegions[which(LOHRegions$group <= 6 & 
                                          LOHRegions$intSize > 1000),]
 LOHRegionsShared <- LOHRegions[which(LOHRegions$group >= 18 &
                                        LOHRegions$intSize > 1000),]
@@ -32,7 +32,7 @@ for(i in 1:1000){
 sigDiff <- unlist(sigDiff)
 sigDiffMWU <- unlist(sigDiffMWU)
 sigDiffCVM <- unlist(sigDiffCVM)
-sum(sigDiff<=0.05)/1000
-sum(sigDiffMWU<=0.05)/1000
-sum(sigDiffCVM<=0.05)/1000
+sum(p.adjust(sigDiff,method="BH")<=0.05)/1000
+sum(p.adjust(sigDiffMWU,method="BH")<=0.05)/1000
+sum(p.adjust(sigDiffCVM,method="BH")<=0.05)/1000
 

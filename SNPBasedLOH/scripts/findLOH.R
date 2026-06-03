@@ -32,11 +32,7 @@ unfiltGts <- extract.gt(dat,element="GT",return.alleles = T)
 
 #define cutoffs
 cutoffGQ <- as.numeric(snakemake@wildcards[["gqcut"]])
-#cutoffGQ <- 10
-#cutoffDP <- 6
 cutoffDP <- as.numeric(snakemake@wildcards[["dpcut"]])
-#cutoffDP <- 10
-#maxDP
 
 #print message
 print(paste0("Filtering SNPs based on depth and genotype quality. Quality cutoff: ", cutoffGQ," Depth cutoff: ", cutoffDP))

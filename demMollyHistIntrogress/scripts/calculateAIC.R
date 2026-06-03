@@ -1,7 +1,9 @@
 #### CALCULATE AIC VALUES FOR ALL MODELS ####
 #### LOAD IN DATA ####
 #get model from snakemake
-model <- snakemake@wildcards[["model"]]
+#take in command line arguments
+args <- commandArgs(trailingOnly = TRUE)
+model <- args[1]
 
 #load in bestLhood file
 dat <- read.delim(paste0("data/",model,"/bestIter/",model,"/",model,".bestlhoods"),sep="\t")

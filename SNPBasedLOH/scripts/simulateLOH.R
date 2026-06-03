@@ -1,10 +1,10 @@
 #### PREPARE OBJECTS ####
 
 #set genome size, distribution to simulate
-chrSizes <- read.delim(paste0("../data/chrIndex.tsv"),
+chrSizes <- read.delim(paste0("data/chrIndex.tsv"),
                        sep="\t",row.names = NULL,header = T)
 #load in data
-sharedLOHEmpirical <- read.delim("../output/LOHRegionsSharedCombined/LOHRegionsSharedCombined.bed",
+sharedLOHEmpirical <- read.delim("output/LOHRegionsSharedCombined/LOHRegionsSharedCombined.bed",
                                  sep='\t',header=F)
 colnames(sharedLOHEmpirical) <- c("chr","start","end")
 sharedLOHEmpirical$intSize <- sharedLOHEmpirical$end - sharedLOHEmpirical$start
@@ -33,6 +33,19 @@ for(i in 1:nReps){
 #save
 for(i in 1:length(simLOH)){
   write.table(simLOH[[i]],
-              file=paste0("../output/LOHRegionsSharedSim/simLOHShared_",i,".bed"),
+              file=paste0("output/LOHRegionsSharedSim/simLOHShared_",i,".bed"),
               quote=FALSE, sep='\t',row.names=F,col.names = F)
 }
+
+
+
+
+
+
+
+
+
+
+
+
+

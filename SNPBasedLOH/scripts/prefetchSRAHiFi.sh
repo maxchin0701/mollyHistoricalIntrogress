@@ -29,7 +29,7 @@ then
 	echo "Downloading $curSrx"
 
 	#prefetch reads
-	prefetch "$curSrx" -O ../data/rawSeq
+	prefetch "$curSrx" -O ../data/rawSeq --max-size 100G
 
 	#mv to new directory
 	cd ../data/rawSeq

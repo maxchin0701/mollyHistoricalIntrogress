@@ -22,6 +22,9 @@ cd data/${model}/bestIter
 cp ${model}_jointMAFpop1_0.obs ${model}_maxL_jointMAFpop1_0.obs
 cp ${model}_jointMAFpop2_0.obs ${model}_maxL_jointMAFpop2_0.obs
 cp ${model}_jointMAFpop2_1.obs ${model}_maxL_jointMAFpop2_1.obs
+cp ${model}_jointMAFpop3_0.obs ${model}_maxL_jointMAFpop3_0.obs
+cp ${model}_jointMAFpop3_1.obs ${model}_maxL_jointMAFpop3_1.obs
+cp ${model}_jointMAFpop3_2.obs ${model}_maxL_jointMAFpop3_2.obs
 
 #copy maxL
 cp ${model}/${model}_maxL.par .

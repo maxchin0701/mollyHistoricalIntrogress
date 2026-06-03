@@ -12,9 +12,9 @@ conda activate genomics
 
 #collect all sample vcf files
 gatk GenomicsDBImport \
-	--genomicsdb-workspace-path data/hapCalls/genDB_All_"${snakemake_wildcards[chr]}" \
+	--genomicsdb-workspace-path data/hapCalls/genDB_"${snakemake_params[DB]}"_"${snakemake_wildcards[chr]}" \
 	--sample-name-map "${snakemake_input[0]}" \
-	-L "${snakemake_input[2]}"
+	-L "${snakemake_input[1]}"
 
 #touch output file
 touch ${snakemake_output[0]}
