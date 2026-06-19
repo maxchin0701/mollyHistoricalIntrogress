@@ -55,14 +55,14 @@ for(i in 1:1000){
   #get simulated and empirical data
   simDatLat <- datNonExonAll[which(datNonExonAll$class == "Simulated" & 
                                   datNonExonAll$iter == i &
-                                  datNonExonAll$pop == "Plat"),8]
+                                  datNonExonAll$pop == "Plat"),15]
   empDatLat <- datNonExonAll[which(datNonExonAll$class == "Empirical" & 
-                                  datNonExonAll$pop == "Plat"),8]
+                                  datNonExonAll$pop == "Plat"),15]
   simDatMex <- datNonExonAll[which(datNonExonAll$class == "Simulated" & 
                                      datNonExonAll$iter == i &
-                                     datNonExonAll$pop == "Pmex"),8]
+                                     datNonExonAll$pop == "Pmex"),15]
   empDatMex <- datNonExonAll[which(datNonExonAll$class == "Empirical" & 
-                                     datNonExonAll$pop == "Pmex"),8]
+                                     datNonExonAll$pop == "Pmex"),15]
   
   #two sided ks test
   pValKSLat <- ks.test(empDatLat,simDatLat)[2]
@@ -90,14 +90,14 @@ for(i in 1:1000){
   #get simulated and empirical data
   simDatLat <- datExonAll[which(datExonAll$class == "Simulated" & 
                                      datExonAll$iter == i &
-                                     datExonAll$pop == "Plat"),8]
+                                     datExonAll$pop == "Plat"),15]
   empDatLat <- datExonAll[which(datExonAll$class == "Empirical" & 
-                                     datExonAll$pop == "Plat"),8]
+                                     datExonAll$pop == "Plat"),15]
   simDatMex <- datExonAll[which(datExonAll$class == "Simulated" & 
                                      datExonAll$iter == i &
-                                     datExonAll$pop == "Pmex"),8]
+                                     datExonAll$pop == "Pmex"),15]
   empDatMex <- datExonAll[which(datExonAll$class == "Empirical" & 
-                                     datExonAll$pop == "Pmex"),8]
+                                     datExonAll$pop == "Pmex"),15]
   
   #two sided ks test
   pValKSLat <- ks.test(empDatLat,simDatLat)[2]
@@ -144,7 +144,7 @@ sum(p.adjust(sigDiffMWUExonPmex,method="BH")<=0.05)/1000
 sum(p.adjust(sigDiffCVMExonPmex,method="BH")<=0.05)/1000
 
 # #### PLOT ####
-# ggplot(datNonExonAll[which(datNonExonAll$pop == "Plat"),], aes(x=D,group=iter,color=class,alpha=as.factor(class))) +
-#   geom_line(stat="density")+
-#   scale_alpha_manual(values = c(1,0.05))
+ggplot(datNonExonAll[which(datNonExonAll$pop == "Plat"),], aes(x=H,group=iter,color=class,alpha=as.factor(class))) +
+  geom_line(stat="density")+
+  scale_alpha_manual(values = c(1,0.05))
 
