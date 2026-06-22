@@ -46,7 +46,6 @@ rule all:
         expand("output/LOHAnc/{chr}LOHAnc_GQ{gqcut}_DP{dpcut}_{pars}.tsv",zip, pars = filtCutFinal_df["PARENTS"], chr = filtCutFinal_df["CHR"],gqcut = filtCutFinal_df["GQ"],dpcut = filtCutFinal_df["DP"]),
         expand("output/SNPall/{chr}SNPall_GQ{gqcut}_DP{dpcut}_{pars}.tsv",zip, pars = filtCutFinal_df["PARENTS"], chr = filtCutFinal_df["CHR"],gqcut = filtCutFinal_df["GQ"],dpcut = filtCutFinal_df["DP"]),
         expand("output/fixDiffVCF/{chr}FixDiff_GQ{gqcut}_DP{dpcut}_{pars}.vcf.gz", zip, pars = filtCutFinal_df["PARENTS"], chr = filtCutFinal_df["CHR"],gqcut = filtCutFinal_df["GQ"],dpcut = filtCutFinal_df["DP"]),
-        #expand("output/haplostrips/haplostrips_{chr}_GQ{gqcut}_DP{dpcut}_{pars}.pdf",zip, pars = filtCutFinal_df["PARENTS"], chr = filtCutFinal_df["CHR"],gqcut = filtCutFinal_df["GQ"],dpcut = filtCutFinal_df["DP"]),
         "data/gCNV/gCNV/processedGCNV.tsv",
 
 #constrain chromosome wildcard
@@ -603,25 +602,52 @@ rule collectLOH:
     script:
         "scripts/findLOH.R"
 
-#generate haplostrips
-rule genHaplostrips:
-    priority: 1
-    input:
-        "output/fixDiffVCF/{chr}FixDiff_GQ{gqcut}_DP{dpcut}_{pars}.vcf.gz"
-    params:
-        chrL=lambda wildcards: str(chr_df[chr_df['CHR'] == wildcards.chr]['END'].iloc[0]),
-    resources:
-        slurm_partition="RM-shared",
-        nodes=1,
-        runtime=60,
-        slurm_extra=lambda wildcards: f"--ntasks-per-node=10 -o scriptOuts/genHaplostrips_{wildcards.chr}_GQ{wildcards.gqcut}_DP{wildcards.dpcut}_{wildcards.pars} -t 1:00:00",
-    output:
-        "output/haplostrips/haplostrips_{chr}_GQ{gqcut}_DP{dpcut}_{pars}.pdf",
-    threads: 10
-    log:
-        "output/haplostrips/genHaplostrips_{chr}_GQ{gqcut}_DP{dpcut}_{pars}.log"
-    script:
-        "scripts/genHaplostrips.sh"
+#get sharedLOH (R)
+
+#run LOHAnc comparison (R)
+
+#generate simulated LOH (R)
+
+#run gCNV compare (R)
+
+#run LOH tract size comparison (R)
+
+#get exons from genome (Sh)
+
+#intersect empirical (Sh)
+
+#intersect simulated (Sh)
+
+#split LOH emp (Sh)
+
+#split LOH sim (Sh)
+
+#compare intersect (Py) OUTPUT NEEDED
+
+#save intersect genes (Py)
+
+#LOH GO enrich (R)
+
+#run SFS stats exon emp
+
+#run SFS stats exon non-emp
+
+#run SFS stats non-exon emp
+
+#run SFS stats non-exon non-emp
+
+#compare SFS stats non-exon
+
+#compare SFS stats exon
+
+
+
+
+
+
+
+
+
 
 
 

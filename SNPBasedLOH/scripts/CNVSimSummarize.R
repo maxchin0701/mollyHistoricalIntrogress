@@ -1,16 +1,18 @@
-#### THIS SCRIPT SUMMARIZES COPY NUMBER VARIATION ACROSS SIMULATED AND EMPIRICAL REGIONS ####
 #### LIBRARIES ####
 library(coda)
 
+#### SET SEED ####
+set.seed(1)
+
 #### LOAD IN DATA ####
 #load in empirical data
-sharedLOHEmpirical <- read.delim("../output/LOHRegionsSharedCombined/LOHRegionsSharedCombined.bed",
+sharedLOHEmpirical <- read.delim("output/LOHRegionsSharedCombined/LOHRegionsSharedCombined.bed",
                                  sep='\t',header=F)
 colnames(sharedLOHEmpirical) <- c("chr","start","end")
 sharedLOHEmpirical$intSize <- sharedLOHEmpirical$end - sharedLOHEmpirical$start
 
 #Load in copy number variation
-genomeCN <- read.delim("../data/gCNV/gCNV/processedGCNV.tsv",
+genomeCN <- read.delim("data/gCNV/gCNV/processedGCNV.tsv",
                                  sep='\t',header=T)
 colnames(genomeCN)[5:23] <- gsub(".","-",colnames(genomeCN)[5:23],
                                  fixed=T)
@@ -19,7 +21,7 @@ colnames(genomeCN)[5:23] <- gsub(".","-",colnames(genomeCN)[5:23],
 #calculate average across samples
 sampWideAvgL<- list()
 for(i in 1:nrow(genomeCN)){
-  print(paste0("interval ",i))
+  #print(paste0("interval ",i))
   sampWideAvgL[[length(sampWideAvgL) + 1]] <- mean(as.numeric(genomeCN[i,5:23]))
 }
 
@@ -36,10 +38,10 @@ simLOHCNV <- list()
 for(i in 1:1000){
   #print message
   print(paste0("processing iteration ",i))
-  simIter<- sample(1:1000,1)
+  simIter <- i
   
   #read in sim regions
-  LOHSim <- read.delim(paste0("../output/LOHRegionsSharedSim/simLOHShared_",simIter,".bed"),
+  LOHSim <- read.delim(paste0("output/LOHRegionsSharedSim/simLOHShared_",simIter,".bed"),
                                    sep='\t',header=F)
   
   #sample tract
@@ -60,8 +62,6 @@ for(i in 1:1000){
   remove(LOHSim)
 }
 
-hist(unlist(simLOHCNV))
-sort(unlist(simLOHCNV))
 hpdSimCNV <- HPDinterval(as.mcmc(unlist(simLOHCNV)))
 
 #### PROCESS EMPIRICAL DATA ####
@@ -71,7 +71,7 @@ empLOHCNV <- list()
 #loop
 for(i in 1:nrow(sharedLOHEmpirical)){
   #print message
-  print(paste0("processing tract ",i))
+  print(paste0("processing empirical tract ",i))
   
   #subset CNV
   curEmpCN <- genomeCN[which(genomeCN$chr==sharedLOHEmpirical[i,1] &
@@ -84,13 +84,17 @@ for(i in 1:nrow(sharedLOHEmpirical)){
   
   #calculate average across region
   empLOHCNV[[length(empLOHCNV)+1]] <- mean(curEmpCN$sampAvg)
-  
-  if(empLOHCNV[[length(empLOHCNV)]] >= hpdSimCNV[1] && 
-     empLOHCNV[[length(empLOHCNV)]] <= hpdSimCNV[2]){
-    print(paste0("tract ",i," within null CNV HPD"))
-  }
 }
 
+#### SAVE ####
+LOHCNSummary <- as.data.frame(matrix(c("sim",rep("emp",65),
+         paste0(hpdSimCNV[1]," - ",hpdSimCNV[2]), unlist(empLOHCNV)),ncol=2,nrow=66))
+
+colnames(propSigDf) <- c("category", "tractAveragedCN")
+#save
+write.table(LOHCNSummary, 
+            file="output/results/LOHSummaryCN.tsv", 
+            quote=FALSE, sep='\t',row.names=FALSE)
 
 
 

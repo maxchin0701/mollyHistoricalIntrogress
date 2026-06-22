@@ -1,0 +1,2 @@
+estimate	statistic	p.value	parameter	conf.low	conf.high	method	alternative
+0.861538461538462	56	2.04924530220353e-09	65	0.753361714678883	0.93468037599213	Exact binomial test	two.sided

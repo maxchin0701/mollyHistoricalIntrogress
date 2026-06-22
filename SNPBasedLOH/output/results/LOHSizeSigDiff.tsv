@@ -1,0 +1,4 @@
+test	propPValsSig
+Kolmogorov-Smirnow	0.774
+Mann-Whitney U	0.852
+Cramer-Von Mises	0.828
