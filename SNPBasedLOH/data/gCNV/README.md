@@ -1,1 +1,1 @@
-Data directory for reference genome and interval lists.
+Data directory for copy number variation files.
