@@ -14,12 +14,12 @@ This repository contains code related to three analyses published as part of (PA
 ## Conda environments
 In the `condaEnvs` directory, you will find `.yml` files associated with conda environments that are used at various points in the analyses. Be sure to build these environments by using:
 
-```
+```unix
 conda env create -f ${ENV}.yml
 ```
 
 ## Additional software
-In addition to the Conda environments, the following software will need to be installed and available in your environment.
+In addition to the Conda environments, the following software will need to be installed/loaded as a module and available in your environment.
 
 [bedtools](https://github.com/arq5x/bedtools2)
 
@@ -33,4 +33,24 @@ In addition to the Conda environments, the following software will need to be in
 
 [whatshap](https://github.com/whatshap/whatshap)
 
-[fastsimcoal2](https://github.com/asalcedo31/fastsimcoal2)
+[fastsimcoal2](https://cmpg.unibe.ch/software/fastsimcoal28/)
+
+## Loading software/exporting paths
+At the top of scripts, you'll see software either loaded as modules,
+
+```unix
+module load ${MODULE_NAME}
+```
+
+or exported to the path,
+
+```unix
+#for scripts in SNPBasedLOH or AGRHistIntrogress
+PATH=$PATH:/ocean/projects/bio230047p/mchin/software/${SOFTWARE}
+
+#for scripts in demMollyHistIntrogress
+export PATH=$PATH::/group/awhitehegrp/max/software/
+```
+Paths will need to be changed to the appropriate directorys where software is installed.
+
+If you install any of the software above locally but the script loads a module to make it available, be sure to export paths as needed, and vice versa.
