@@ -22,9 +22,15 @@ conda env create -f ${ENV}.yml
 In addition to the Conda environments, the following software will need to be installed and available in your environment.
 
 [bedtools](https://github.com/arq5x/bedtools2)
+
 [GATK](https://github.com/broadinstitute/gatk)
+
 [samtools](https://github.com/samtools/samtools)
+
 [bcftools](https://github.com/samtools/bcftools)
+
 [Cactus](https://github.com/ComparativeGenomicsToolkit/cactus)
+
 [whatshap](https://github.com/whatshap/whatshap)
+
 [fastsimcoal2](https://github.com/asalcedo31/fastsimcoal2)
