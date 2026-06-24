@@ -9,7 +9,7 @@
 module load GATK
 module load samtools
 module load anaconda3/2022.10
-conda activate genomics
+conda activate bwamem
 
 #index genome file (bwa)
 bwa-mem2 index "${snakemake_input[0]}"

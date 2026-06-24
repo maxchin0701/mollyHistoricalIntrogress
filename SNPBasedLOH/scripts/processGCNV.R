@@ -1,8 +1,12 @@
+# This script combines germline copy number variation calls across chromosomes
+# Output: matrix with columns = samples and rows = samples 
+
 #### LOAD PACKAGES ####
 library(stringr)
 
 #### READ IN PARAMS ####
-outFile <- snakemake@output[[1]]
+args <- commandArgs(trailingOnly = TRUE)
+outFile <- args[1]
 #outFile <- "data/gCNV/gCNV/processedGCNV.tsv"
 
 #### OBJECT TO STORE ####
@@ -36,11 +40,8 @@ for(i in 1:length(chrs)){
     samps <- c(samps,
                names(read.delim(paste0(j,"/sample_name.txt"))))
   }
-  print(samps)
   #replace dots with dash
   samps <- gsub(".","-",samps,fixed=T)
-  print(samps)
-  print(i)
   #extract pfor samples
   pForIndices <- which(matrix(unlist(strsplit(samps,split="gi|ve|[_]+")),
                               ncol=2,byrow=T)[,1] == "Pfo")

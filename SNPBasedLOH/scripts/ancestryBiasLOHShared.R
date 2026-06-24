@@ -1,9 +1,19 @@
+# This script runs a binomial test comparing distribution of ancestries across
+# shared LOH tracts. 
+# Output: 
+#     LOHAncBinomTest.tsv: tsv with test statistics
+
 #### LIBRARY ####
 library(coda)
 library(broom)
 
+#### READ IN PARAMS ####
+args <- commandArgs(trailingOnly = TRUE)
+inLOHAnc <- args[1]
+outBinomSummary <- args[2]
+
 #### LOAD IN DATA ####
-LOHAncShared <- read.delim(paste0("output/LOHRegionsSharedCombined/LOHAncSharedCombined.bed"),
+LOHAncShared <- read.delim(paste0(inLOHAnc),
                          sep="\t",header=F)
 
 #### SIMULATE WITH BINOM ####
@@ -18,5 +28,5 @@ binomOutTidy <- tidy(binomOut)
 
 #save
 write.table(binomOutTidy, 
-            file="output/results/LOHAncBinomTest.tsv", 
+            file=outBinomSummary, 
             quote=FALSE, sep='\t',row.names=FALSE)

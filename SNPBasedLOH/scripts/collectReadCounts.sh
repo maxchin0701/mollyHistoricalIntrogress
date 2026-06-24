@@ -8,7 +8,7 @@
 #activate conda env
 module load GATK
 module load anaconda3/2022.10
-conda activate genomics
+conda activate gatk
 
 #take in snakemake vars
 bam="${snakemake_input[bam]}"

@@ -10,10 +10,10 @@ sampP_df = pd.read_csv("./data/sampleIndexPar.tsv", sep='\t')
 ref_df = pd.read_csv("./data/refInfo.tsv", sep="\t")
 chr_df = pd.read_csv("./data/chrIndex.tsv", sep="\t")
 filtCut_df = pd.read_csv("./data/filterCutoffs.tsv", sep="\t")
+
+#set ref species and annotation path
 refSpecies = ["LM"]
-#refSpecies = ["LM","GLMV"]
-#chr_df = pd.read_csv("./data/testChrIndex.tsv", sep="\t")
-#filtCut_df = pd.read_csv("./data/testFilterCutoffs.tsv", sep="\t")
+refGFF = "data/funcAnnotate/eMapperOut/funcAnnotatePFor.emapper.decorated.gff"
 
 #append samp_df and samp_df_hifi to create samp_df_all
 samp_df_all=pd.concat([samp_df,samp_df_hifi],axis=0)
@@ -35,26 +35,37 @@ for i in refSpecies:
             filtCutDP.append(filtCut_df["DP"][k])
     
 #append to create new df
-filtCutFinal_df=pd.DataFrame({"PARENTS": filtCutPar, "CHR": filtCutChrs, "GQ": filtCutGQ, "DP": filtCutDP})
-    
+filtCutFinal_df=pd.DataFrame({"PARENTS": filtCutPar, "CHR": filtCutChrs, "GQ": filtCutGQ, "DP": filtCutDP})  
 
 rule all:
     input:
-        expand("data/hapCalls/{chr}CombinedFiltParHyb.vcf.gz",zip,chr = filtCutFinal_df["CHR"]),
-        expand("data/hapCalls/{chr}CombinedFiltPar.vcf.gz",zip,chr = filtCutFinal_df["CHR"]),
         expand("output/LOHRegions/{chr}LOHRegions_GQ{gqcut}_DP{dpcut}_{pars}.tsv",zip,pars = filtCutFinal_df["PARENTS"],chr = filtCutFinal_df["CHR"],gqcut = filtCutFinal_df["GQ"],dpcut = filtCutFinal_df["DP"]),
         expand("output/LOHAnc/{chr}LOHAnc_GQ{gqcut}_DP{dpcut}_{pars}.tsv",zip, pars = filtCutFinal_df["PARENTS"], chr = filtCutFinal_df["CHR"],gqcut = filtCutFinal_df["GQ"],dpcut = filtCutFinal_df["DP"]),
-        expand("output/SNPall/{chr}SNPall_GQ{gqcut}_DP{dpcut}_{pars}.tsv",zip, pars = filtCutFinal_df["PARENTS"], chr = filtCutFinal_df["CHR"],gqcut = filtCutFinal_df["GQ"],dpcut = filtCutFinal_df["DP"]),
-        expand("output/fixDiffVCF/{chr}FixDiff_GQ{gqcut}_DP{dpcut}_{pars}.vcf.gz", zip, pars = filtCutFinal_df["PARENTS"], chr = filtCutFinal_df["CHR"],gqcut = filtCutFinal_df["GQ"],dpcut = filtCutFinal_df["DP"]),
-        "data/gCNV/gCNV/processedGCNV.tsv",
+        "output/LOHRegionsSharedCombined/LOHRegionsSharedCombined.bed",
+        "output/LOHRegionsSharedCombined/LOHAncSharedCombined.bed",
+        "output/LOHRegionsSharedCombined/LOHSharedGenes.tsv",
+        "output/results/LOHSummaryCN.tsv",
+        "output/results/LOHAncBinomTest.tsv",
+        "output/results/LOHSizeSigDiff.tsv",
+        "output/results/CDSIntersectOut.txt",
+        "output/results/LOHGenesGOEnrichBP.tsv",
+        "output/results/LOHGenesGOEnrichCC.tsv",
+        "output/results/LOHGenesGOEnrichMF.tsv",
+        "output/results/LOHDStatsExon.tsv",
+        "output/results/LOHHStatsExon.tsv",
+        "output/results/LOHEStatsExon.tsv",
+        "output/results/LOHDStatsNonExon.tsv",
+        "output/results/LOHHStatsNonExon.tsv",
+        "output/results/LOHEStatsNonExon.tsv",
 
+        
 #constrain chromosome wildcard
 wildcard_constraints:
     chr="chr[0-9_]+",
 
 #download sra files
 rule prefetchSRA:
-    priority: 10
+    priority: 15
     params:
         srx=lambda wc: (samp_df[samp_df['NAME'] == wc.sample]['SRX']).tolist(),
     resources:
@@ -72,7 +83,7 @@ rule prefetchSRA:
         
 #download sra files for hifi samples
 rule prefetchSRAHiFi:
-    priority: 10
+    priority: 15
     params:
         srx=lambda wc: (samp_df_hifi[samp_df_hifi['NAME'] == wc.sample_hifi]['SRX']).tolist(),
     resources:
@@ -91,7 +102,7 @@ rule prefetchSRAHiFi:
 
 #extract fastq.gz from sra files
 rule dumpSRA:
-    priority: 9
+    priority: 14
     input:
         "data/rawSeq/{sample}/{sample}.sra",
     params:
@@ -112,7 +123,7 @@ rule dumpSRA:
         
 #extract fastq.gz from sra files for hifi samples
 rule dumpSRAHiFi:
-    priority: 9
+    priority: 14
     input:
         "data/rawSeq/{sample_hifi}/{sample_hifi}_HiFi.sra",
     params:
@@ -132,7 +143,7 @@ rule dumpSRAHiFi:
         
 #trim files
 rule trimFastq:
-    priority: 8
+    priority: 13
     input:
         forRead="data/rawSeq/{sample}/{sample}_1.fastq.gz",
         revRead="data/rawSeq/{sample}/{sample}_2.fastq.gz",
@@ -152,7 +163,7 @@ rule trimFastq:
  
 #trim files for hifi 
 rule trimFastqHiFi:
-    priority: 8
+    priority: 13
     input:
         reads="data/rawSeq/{sample_hifi}/{sample_hifi}_Hifi.fastq.gz",
     resources:
@@ -170,7 +181,7 @@ rule trimFastqHiFi:
 
 #index ref
 rule indexRef:
-    priority: 10
+    priority: 15
     input:
         expand("data/refGenome/{refName}.fasta",refName = ref_df["NAME"]),
     resources:
@@ -189,7 +200,7 @@ rule indexRef:
 
 #create interval lists for chrs
 rule createIntervalL:
-    priority: 9
+    priority: 14
     input:
        expand("data/refGenome/{refName}.fasta",refName = ref_df["NAME"]),
        expand("data/refGenome/{refName}.dict",refName = ref_df["NAME"]),
@@ -209,7 +220,7 @@ rule createIntervalL:
         
 #create genome wide interval list
 rule createGWideIntervalL:
-    priority: 8
+    priority: 13
     input:
         bedF=expand("data/refGenome/intervalLists/PFor_{chr}.bed",chr = chr_df["CHR"])
     resources:
@@ -228,7 +239,7 @@ rule createGWideIntervalL:
 
 #run alignments
 rule alignFastq:
-    priority: 7
+    priority: 12
     input:
         forRead="data/trimSeq/{sample}/{sample}_forward_paired.fastq.gz",
         revRead="data/trimSeq/{sample}/{sample}_reverse_paired.fastq.gz",
@@ -249,7 +260,7 @@ rule alignFastq:
         
 #run alignments for hifi samples
 rule alignFastqHiFi:
-    priority: 7
+    priority: 12
     input:
         reads="data/trimSeq/{sample_hifi}/{sample_hifi}Filt.fastq.gz",
         ref=ref_df.iloc[0,1],
@@ -270,7 +281,7 @@ rule alignFastqHiFi:
         
 #collect sample read counts
 rule collectReadCounts:
-    priority: 6 
+    priority: 11
     input:
         bam="data/aligned/{sample}/{sample}SortedDupMarked.bam",
         intervals="data/refGenome/intervalLists/PFor_{chr}.interval_list",
@@ -289,7 +300,7 @@ rule collectReadCounts:
 
 #call variants
 rule callHaps:
-    priority: 6
+    priority: 11
     input:
         bam="data/aligned/{sample}/{sample}SortedDupMarked.bam",
         intervals="data/refGenome/intervalLists/PFor_{chr}.interval_list",
@@ -312,7 +323,7 @@ rule callHaps:
 
 #Call variants for hifi samples
 rule callHapsHiFi:
-    priority: 6
+    priority: 11
     input:
         bam="data/aligned/{sample_hifi}/{sample_hifi}SortedDupMarked_hifi.bam",
         intervals="data/refGenome/intervalLists/PFor_{chr}.interval_list",
@@ -331,10 +342,9 @@ rule callHapsHiFi:
     script:
         "scripts/callHaplotypesHifi.sh"
 
-
 #determine ploidy
 rule determinePloidy:
-    priority: 5
+    priority: 10
     input:
         ref=ref_df.iloc[0,1],
         intervals="data/refGenome/intervalLists/PFor_{chr}.interval_list",
@@ -354,7 +364,7 @@ rule determinePloidy:
 
 #write sample_map 
 rule createSampleMapAll:
-    priority: 5
+    priority: 10
     input:
         sampVCF=expand("data/hapCalls/{sample}/{sample}{{chr}}.vcf.gz",sample = samp_df["NAME"].unique()),
         sampVCFHiFi=expand("data/hapCalls/{sample_hifi}/{sample_hifi}{{chr}}-hifi.vcf.gz",sample_hifi = samp_df_hifi["NAME"].unique()),
@@ -375,7 +385,7 @@ rule createSampleMapAll:
 
 #create sample map for parent-hybrids
 rule createSampleMapParHyb:
-    priority: 5
+    priority: 10
     input:
         sampVCF=expand("data/hapCalls/{sample}/{sample}{{chr}}.vcf.gz",sample = samp_df["NAME"].unique()),
         sampVCFHiFi=expand("data/hapCalls/{sample_hifi}/{sample_hifi}{{chr}}-hifi.vcf.gz",sample_hifi = samp_df_hifi["NAME"].unique()),
@@ -396,7 +406,7 @@ rule createSampleMapParHyb:
         
 #create sample map for parents
 rule createSampleMapPars:
-    priority: 5
+    priority: 10
     input:
         sampVCF=expand("data/hapCalls/{sample}/{sample}{{chr}}.vcf.gz",sample = samp_df["NAME"].unique()),
         sampVCFHiFi=expand("data/hapCalls/{sample_hifi}/{sample_hifi}{{chr}}-hifi.vcf.gz",sample_hifi = samp_df_hifi["NAME"].unique()),
@@ -417,7 +427,7 @@ rule createSampleMapPars:
         
 #call gCNV
 rule callGCNV:
-    priority: 4
+    priority: 9
     input:
         intervals="data/refGenome/intervalLists/PFor_{chr}.interval_list",
         readCounts=expand("data/gCNV/readCounts/{sample}/{sample}_{{chr}}_Counts1kb.hdf5",sample = samp_df["NAME"].unique()),
@@ -434,9 +444,9 @@ rule callGCNV:
     script:
         "scripts/gCNVAll.sh"
 
-#create genomicsDB database 
+#create genomicsDB database (all samples)
 rule createGenomicsDBAll:
-    priority: 4
+    priority: 9
     input:
         "data/hapCalls/allSamps_{chr}.sample_map",
         "data/refGenome/intervalLists/PFor_{chr}.interval_list",
@@ -455,8 +465,9 @@ rule createGenomicsDBAll:
     script:
         "scripts/createGenomicsDB.sh"
 
+#create genomicsDB database (parent-hybrids)
 rule createGenomicsDBParHyb:
-    priority: 4
+    priority: 9
     input:
         "data/hapCalls/parHybSamps_{chr}.sample_map",
         "data/refGenome/intervalLists/PFor_{chr}.interval_list",
@@ -475,8 +486,9 @@ rule createGenomicsDBParHyb:
     script:
         "scripts/createGenomicsDB.sh"
 
+#create genomicsDB database (parents)
 rule createGenomicsDBPar:
-    priority: 4
+    priority: 9
     input:
         "data/hapCalls/parSamps_{chr}.sample_map",
         "data/refGenome/intervalLists/PFor_{chr}.interval_list",
@@ -494,11 +506,10 @@ rule createGenomicsDBPar:
         "data/hapCalls/createGenomicsDBPar_{chr}.log"
     script:
         "scripts/createGenomicsDB.sh"
-
         
 #process gCNV
 rule processGCNV:
-    priority: 3
+    priority: 8
     input:
         expand("data/hapCalls/genDBAllExists_{chr}.txt",chr = filtCutFinal_df["CHR"])
     resources:
@@ -508,16 +519,15 @@ rule processGCNV:
         slurm_extra=lambda wildcards: f"--ntasks-per-node=1 -o scriptOuts/processGCNV -t 1:00:00",
     output:
         "data/gCNV/gCNV/processedGCNV.tsv"
-    threads: 30
+    threads: 1
     log: 
         "data/gCNV/gCNV/processGCNV.log"
     script:
-        "scripts/processGCNV.R"
+        "scripts/processGCNV.sh"
 
-
-#perform joint genotyping
+#perform joint genotyping (all samples)
 rule jointGenotypingAll:
-    priority: 3
+    priority: 8
     input:
         "data/hapCalls/genDBAllExists_{chr}.txt",
         ref=ref_df.iloc[0,1],
@@ -537,9 +547,9 @@ rule jointGenotypingAll:
     script:
         "scripts/jointGenotypingAll.sh"
         
-#perform joint genotyping
+#perform joint genotyping (parent hybrids)
 rule jointGenotypingParHyb:
-    priority: 3
+    priority: 8
     input:
         "data/hapCalls/genDBParHybExists_{chr}.txt",
         ref=ref_df.iloc[0,1],
@@ -559,9 +569,9 @@ rule jointGenotypingParHyb:
     script:
         "scripts/jointGenotypingParHyb.sh"
         
-#perform joint genotyping
+#perform joint genotyping (parents)
 rule jointGenotypingPar:
-    priority: 3
+    priority: 8
     input:
         "data/hapCalls/genDBParExists_{chr}.txt",
         ref=ref_df.iloc[0,1],
@@ -580,10 +590,29 @@ rule jointGenotypingPar:
         "data/hapCalls/jointGenotyping_{chr}.log"
     script:
         "scripts/jointGenotypingPar.sh"
+        
+#merge parHapCalls
+rule mergeParHapCalls:
+    priority: 7
+    input:
+        "data/hapCalls/{chr}CombinedFiltPar.vcf.gz",
+    resources:
+        slurm_partition="RM-shared",
+        nodes=1,
+        runtime=600,
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=4 -o scriptOuts/mergeParHapCalls -t 1:00:00",
+    output:
+        "data/mergedHapCalls/parHapCalls.vcf.gz"
+    threads: 4
+    log:
+        "data/mergedHapCalls/mergeParHapCalls.log"
+    script:
+        "scripts/mergeParHapCalls.sh"
+
 
 #run Rscript to collect LOH regions
 rule collectLOH:
-    priority: 2
+    priority: 7
     input:
         "data/hapCalls/{chr}CombinedFiltParHyb.vcf.gz"
     resources:
@@ -594,51 +623,382 @@ rule collectLOH:
     output:
         "output/LOHRegions/{chr}LOHRegions_GQ{gqcut}_DP{dpcut}_{pars}.tsv",
         "output/LOHAnc/{chr}LOHAnc_GQ{gqcut}_DP{dpcut}_{pars}.tsv",
-        "output/SNPall/{chr}SNPall_GQ{gqcut}_DP{dpcut}_{pars}.tsv",
         "output/fixDiffVCF/{chr}FixDiff_GQ{gqcut}_DP{dpcut}_{pars}.vcf.gz"
     threads: 10
     log:
         "output/collectLOH_{chr}_GQ{gqcut}_DP{dpcut}_{pars}.log"
     script:
-        "scripts/findLOH.R"
+        "scripts/findLOH.sh"
 
-#get sharedLOH (R)
+#get BED with shared LOH regions
+rule getSharedLOHBed:
+    priority: 6
+    input:
+        expand("output/LOHRegions/{chr}LOHRegions_GQ10_DP6_LM.tsv",chr=filtCutFinal_df["CHR"].unique()),
+    resources:
+        slurm_partition="RM-shared",
+        nodes=1,
+        runtime=60,
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=1 -o scriptOuts/getSharedLOHBed -t 1:00:00",
+    output:
+        "output/LOHRegionsSharedCombined/LOHRegionsSharedCombined.bed",
+        "output/LOHRegionsSharedCombined/LOHAncSharedCombined.bed"
+    threads: 1
+    log:
+        "output/LOHRegionsSharedCombined/getSharedLOHBed.log"
+    script:
+        "scripts/getSharedLOHBed.sh"
+        
+#run LOHAnc comparison
+rule compareLOHSharedAnc:
+    priority: 5
+    input:
+        "output/LOHRegionsSharedCombined/LOHAncSharedCombined.bed",
+    resources:
+        slurm_partition="RM-shared",
+        nodes=1,
+        runtime=60,
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=1 -o scriptOuts/compareLOHSharedAnc -t 1:00:00",
+    output:
+        "output/results/LOHAncBinomTest.tsv"
+    threads: 1
+    log:
+        "output/LOHRegionsSharedCombined/compareLOHSharedAnc.log"
+    script:
+        "scripts/compareLOHSharedAnc.sh"
 
-#run LOHAnc comparison (R)
+#generate simulated LOH
+rule simulateLOH:
+    priority: 5
+    input:
+        "output/LOHRegionsSharedCombined/LOHRegionsSharedCombined.bed",
+    resources:
+        slurm_partition="RM-shared",
+        nodes=1,
+        runtime=60,
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=1 -o scriptOuts/simulateLOH -t 1:00:00",
+    output:
+        expand("output/LOHRegionsSharedSim/simLOHShared_{iter}.bed",iter=list(range(1,1001)))
+    threads: 1
+    log:
+        "output/LOHRegionsSharedSim/simulateLOH.log"
+    script:
+        "scripts/simulateLOH.sh"
 
-#generate simulated LOH (R)
+#run gCNV compare
+rule compareGCNV:
+    priority: 4
+    input:
+        "output/LOHRegionsSharedCombined/LOHRegionsSharedCombined.bed",
+        "data/gCNV/gCNV/processedGCNV.tsv",
+        expand("output/LOHRegionsSharedSim/simLOHShared_{iter}.bed",iter=list(range(1,1001))),
+    resources:
+        slurm_partition="RM-shared",
+        nodes=1,
+        runtime=60,
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=1 -o scriptOuts/compareGCNV -t 1:00:00",
+    output:
+        "output/results/LOHSummaryCN.tsv"
+    threads: 1
+    log:
+        "output/results/LOHSummaryCN.log"
+    script:
+        "scripts/LOHSummaryCN.sh"
 
-#run gCNV compare (R)
+#run LOH tract size comparison
+rule compareLOHTractSize:
+    priority: 4
+    input:
+        expand("output/LOHRegions/{chr}LOHRegions_GQ10_DP6_LM.tsv",chr=filtCutFinal_df["CHR"].unique()),
+    resources:
+        slurm_partition="RM-shared",
+        nodes=1,
+        runtime=60,
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=1 -o scriptOuts/compareLOHTractSize -t 1:00:00",
+    output:
+        "output/results/LOHSizeSigDiff.tsv"
+    threads: 1
+    log:
+        "output/results/compareLOHTractSize.log"
+    script:
+        "scripts/compareLOHTractSize.sh"
 
-#run LOH tract size comparison (R)
+#get exons from genome
+rule getExonIntervals:
+    priority: 4
+    input:
+        refGFF,
+    resources:
+        slurm_partition="RM-shared",
+        nodes=1,
+        runtime=60,
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=1 -o scriptOuts/getExonIntervals -t 1:00:00",
+    output:
+        "data/funcAnnotate/PForExons.bed"
+    threads: 1
+    log:
+        "output/funcAnnotate/getExonIntervals.log"
+    script:
+        "scripts/getExonIntervals.sh"
 
-#get exons from genome (Sh)
+#intersect empirical
+rule intersectLOHSharedEmp:
+    priority: 4
+    input:
+        "output/LOHRegionsSharedCombined/LOHRegionsSharedCombined.bed",
+        refGFF,
+    resources:
+        slurm_partition="RM-shared",
+        nodes=1,
+        runtime=60,
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=1 -o scriptOuts/intersectLOHSharedEmp -t 1:00:00",
+    output:
+        "output/LOHRegionsSharedCombined/LOHRegionsSharedCombinedSorted.bed",
+        "output/LOHRegionsSharedCombined/LOHSharedIntersectOut.tsv",
+    threads: 1
+    log:
+        "output/LOHRegionsSharedCombined/intersectLOHSharedEmp.log"
+    script:
+        "scripts/intersectLOHShared.sh"
 
-#intersect empirical (Sh)
+#intersect simulated
+rule intersectLOHSharedSim:
+    priority: 4
+    input:
+        "output/LOHRegionsSharedSim/simLOHShared_{iter}.bed",
+        refGFF,
+    resources:
+        slurm_partition="RM-shared",
+        nodes=1,
+        runtime=60,
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=1 -o scriptOuts/intersectLOHSharedSim_{wildcards.iter} -t 1:00:00",
+    output:
+        "output/LOHRegionsSharedSim/simLOHShared_{iter}Sorted.bed",
+        "output/LOHRegionsSimIntersectOut/simLOHShared_{iter}Out.tsv",
+    threads: 1
+    log:
+        "output/LOHRegionsSimIntersectOut/intersectLOHSharedSim_{iter}.log"
+    script:
+        "scripts/intersectLOHShared.sh"
 
-#intersect simulated (Sh)
+#split LOH emp
+rule splitLOHEmp:
+    priority: 3
+    input:
+        "data/funcAnnotate/PForExons.bed",
+        "output/LOHRegionsSharedCombined/LOHRegionsSharedCombined.bed",
+    resources:
+        slurm_partition="RM-shared",
+        nodes=1,
+        runtime=60,
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=1 -o scriptOuts/splitLOHEmp -t 1:00:00",
+    output:
+        "output/LOHRegionsSharedCombined/LOHRegionsSharedCombinedNonExon.bed",
+        "output/LOHRegionsSharedCombined/LOHRegionsSharedCombinedExon.bed",
+    threads: 1
+    log:
+        "output/LOHRegionsSharedCombined/splitLOHEmp.log"
+    script:
+        "scripts/splitLOHBed.sh"
+        
+#split LOH sim
+rule splitLOHSim:
+    priority: 3
+    input:
+        "data/funcAnnotate/PForExons.bed",
+        "output/LOHRegionsSharedSim/simLOHShared_{iter}.bed",
+    resources:
+        slurm_partition="RM-shared",
+        nodes=1,
+        runtime=60,
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=1 -o scriptOuts/splitLOHSim_{wildcards.iter} -t 1:00:00",
+    output:
+        "output/LOHRegionsSharedSim/simLOHSharedNonExon_{iter}.bed",
+        "output/LOHRegionsSharedSim/simLOHSharedExon_{iter}.bed",
+    threads: 1
+    log:
+        "output/LOHRegionsSharedSim/splitLOHSim_{iter}.log"
+    script:
+        "scripts/splitLOHBed.sh"
 
-#split LOH emp (Sh)
+#compare intersect
+rule compareLOHCDSIntersect:
+    priority: 3
+    input:
+        "output/LOHRegionsSharedCombined/LOHSharedIntersectOut.tsv",
+        expand("output/LOHRegionsSimIntersectOut/simLOHShared_{iter}Out.tsv",iter=list(range(1,1001))),
+    resources:
+        slurm_partition="RM-shared",
+        nodes=1,
+        runtime=60,
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=1 -o scriptOuts/compareLOHCDSIntersect -t 1:00:00",
+    output:
+        "output/results/CDSIntersectOut.txt",
+    threads: 1
+    log:
+        "output/results/compareLOHCDSIntersect.log"
+    script:
+        "scripts/compareLOHCDSIntersect.sh"
 
-#split LOH sim (Sh)
+#save intersect genes
+rule saveIntersectGenes:
+    priority: 3
+    input:
+        "output/LOHRegionsSharedCombined/LOHSharedIntersectOut.tsv",
+    resources:
+        slurm_partition="RM-shared",
+        nodes=1,
+        runtime=60,
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=1 -o scriptOuts/saveIntersectGenes -t 1:00:00",
+    output:
+        "output/LOHRegionsSharedCombined/LOHSharedGenes.tsv",
+    threads: 1
+    log:
+        "output/LOHRegionsSharedCombined/saveIntersectGenes.log"
+    script:
+        "scripts/saveIntersectGenes.sh"
 
-#compare intersect (Py) OUTPUT NEEDED
-
-#save intersect genes (Py)
-
-#LOH GO enrich (R)
+#LOH GO enrich
+rule LOHGenesGOEnrich:
+    priority: 2
+    input:
+        "output/LOHRegionsSharedCombined/LOHSharedGenes.tsv",
+    resources:
+        slurm_partition="RM-shared",
+        nodes=1,
+        runtime=60,
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=1 -o scriptOuts/LOHGenesGOEnrich -t 1:00:00",
+    output:
+        "output/results/LOHGenesGOEnrichBP.tsv",
+        "output/results/LOHGenesGOEnrichCC.tsv",
+        "output/results/LOHGenesGOEnrichMF.tsv",
+    threads: 1
+    log:
+        "output/results/LOHGenesGOEnrich.log"
+    script:
+        "scripts/LOHGenesGOEnrich.sh"
 
 #run SFS stats exon emp
-
-#run SFS stats exon non-emp
+rule SFSStatsEmpExon:
+    priority: 2
+    input:
+        "data/popsHTSPopgen.tsv"
+        "data/mergedHapCalls/parHapCalls.vcf.gz"
+        "output/LOHRegionsSharedCombined/LOHRegionsSharedCombinedExon.bed",
+    resources:
+        slurm_partition="RM-shared",
+        nodes=1,
+        runtime=60,
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=1 -o scriptOuts/SFSStatsEmpExon -t 1:00:00",
+    output:
+        "output/selectionStats/LOHRegionsEmpStatsExon.tsv",
+    threads: 1
+    log:
+        "output/selectionStats/SFSStatsEmpExon.log"
+    script:
+        "scripts/runSFSStats.sh"
+        
+#run SFS stats exon sim
+rule SFSStatsSimExon:
+    priority: 2
+    input:
+        "data/popsHTSPopgen.tsv"
+        "data/mergedHapCalls/parHapCalls.vcf.gz"
+        "output/LOHRegionsSharedSim/simLOHSharedExon_{iter}.bed",
+    resources:
+        slurm_partition="RM-shared",
+        nodes=1,
+        runtime=60,
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=1 -o scriptOuts/SFSStatsSimExon_{iter} -t 1:00:00",
+    output:
+        "output/selectionStats/simStatsOut/simRegionsStatsExon_{iter}.tsv",
+    threads: 1
+    log:
+        "output/selectionStats/simStatsOut/SFSStatsSimExon_{iter}.log"
+    script:
+        "scripts/runSFSStats.sh"
 
 #run SFS stats non-exon emp
+rule SFSStatsEmpNonExon:
+    priority: 2
+    input:
+        "data/popsHTSPopgen.tsv"
+        "data/mergedHapCalls/parHapCalls.vcf.gz"
+        "output/LOHRegionsSharedCombined/LOHRegionsSharedCombinedNonExon.bed",
+    resources:
+        slurm_partition="RM-shared",
+        nodes=1,
+        runtime=60,
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=1 -o scriptOuts/SFSStatsEmpNonExon -t 1:00:00",
+    output:
+        "output/selectionStats/LOHRegionsEmpStatsNonExon.tsv",
+    threads: 1
+    log:
+        "output/selectionStats/SFSStatsEmpNonExon.log"
+    script:
+        "scripts/runSFSStats.sh"
 
-#run SFS stats non-exon non-emp
+#run SFS stats non-exon sim
+rule SFSStatsSimNonExon:
+    priority: 2
+    input:
+        "data/popsHTSPopgen.tsv"
+        "data/mergedHapCalls/parHapCalls.vcf.gz"
+        "output/LOHRegionsSharedSim/simLOHSharedNonExon_{iter}.bed",
+    resources:
+        slurm_partition="RM-shared",
+        nodes=1,
+        runtime=60,
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=1 -o scriptOuts/SFSStatsSimNonExon_{iter} -t 1:00:00",
+    output:
+        "output/selectionStats/simStatsOut/simRegionsStatsNonExon_{iter}.tsv",
+    threads: 1
+    log:
+        "output/selectionStats/simStatsOut/SFSStatsSimNonExon_{iter}.log"
+    script:
+        "scripts/runSFSStats.sh"
 
-#compare SFS stats non-exon
+#SFS stats exon
+rule processSelectionStatsExon:
+    priority: 1
+    input:
+        "output/selectionStats/LOHRegionsEmpStatsExon.tsv",
+        expand("output/selectionStats/simStatsOut/simRegionsStatsExon_{iter}.tsv",iter=list(range(1,1001))),        
+    resources:
+        slurm_partition="RM-shared",
+        nodes=1,
+        runtime=60,
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=1 -o scriptOuts/processSelectionStatsExon -t 1:00:00",
+    output:
+        "output/results/LOHDStatsExon.tsv",
+        "output/results/LOHHStatsExon.tsv",
+        "output/results/LOHEStatsExon.tsv",
+    threads: 1
+    log:
+        "output/results/processSelectionStatsExon.log"
+    script:
+        "scripts/processSelectionStatsExon.sh"
 
-#compare SFS stats exon
+#compare SFS stats Non-exon
+rule processSelectionStatsNonExon:
+    priority: 1
+    input:
+        "output/selectionStats/LOHRegionsEmpStatsNonExon.tsv",
+        expand("output/selectionStats/simStatsOut/simRegionsStatsNonExon_{iter}.tsv",iter=list(range(1,1001))),        
+    resources:
+        slurm_partition="RM-shared",
+        nodes=1,
+        runtime=60,
+        slurm_extra=lambda wildcards: f"--ntasks-per-node=1 -o scriptOuts/processSelectionStatsNonExon -t 1:00:00",
+    output:
+        "output/results/LOHDStatsNonExon.tsv",
+        "output/results/LOHHStatsNonExon.tsv",
+        "output/results/LOHEStatsNonExon.tsv",
+    threads: 1
+    log:
+        "output/results/processSelectionStatsNonExon.log"
+    script:
+        "scripts/processSelectionStatsNonExon.sh"
 
 
 

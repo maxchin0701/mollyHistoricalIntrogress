@@ -5,10 +5,6 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH -o createSampleMap
 
-#activate conda
-module load anaconda3/2022.10
-conda activate genomics
-
 #save variables
 sampN=${snakemake_params[sampNames]}
 out=${snakemake_output[0]}

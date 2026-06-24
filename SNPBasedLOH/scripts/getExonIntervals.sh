@@ -6,8 +6,8 @@
 #SBATCH -o scriptOuts/getExonsBed
 
 #set variables
-GFF=data/funcAnnotate/eMapperOut/funcAnnotatePFor.emapper.decorated.gff
-BED=data/funcAnnotate/PForExons.bed
+GFF=${snakemake_input[0]}
+BED=${snakemake_output[0]}
 
 #convert gff exons to bed 
-awk 'BEGIN {OFS="\t"}; $3=="exon" {print $1, $4, $5}' data/funcAnnotate/eMapperOut/funcAnnotatePFor.emapper.decorated.gff > data/funcAnnotate/PForExons.bed
+awk 'BEGIN {OFS="\t"}; $3=="exon" {print $1, $4, $5}' ${GFF} > ${BED}

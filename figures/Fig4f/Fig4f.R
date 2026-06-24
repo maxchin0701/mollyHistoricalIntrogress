@@ -39,11 +39,6 @@ LOHAncSharedLong <- LOHAnc[LOHAncSharedLongIndex,]
 #interval size
 LOHAncSharedLong$intSize <- LOHAncSharedLong$end - LOHAncSharedLong$start
 
-#Save file
-write.table(LOHAncSharedLong,
-            "../../SNPBasedLOH/output/LOHRegionsSharedCombined/LOHAncSharedCombined.bed",
-            quote=FALSE, sep='\t',row.names=F,col.names = F)
-
 #### PLOT ####
 cols <- colorRampPalette(c("#0000FF","#F37221"))(2)
 

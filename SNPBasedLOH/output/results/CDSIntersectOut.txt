@@ -1,0 +1,4 @@
+Total empirical CDS: 103720
+Average simulated total CDS: 87070
+p-value (proportion of simulated tract sets with CDS sum > empirical): 0.136
+HPD interval: [ 58614 116970]

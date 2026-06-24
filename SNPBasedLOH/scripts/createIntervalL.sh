@@ -7,7 +7,7 @@
 
 module load GATK
 module load anaconda3/2022.10
-conda activate genomics
+conda activate gatk
 
 #run python script to generate bed for chr
 python scripts/createBed.py --inFasta "${snakemake_input[0]}" --scaff "${snakemake_wildcards[chr]}" --intSize 1000 --outBed data/refGenome/intervalLists/PFor_"${snakemake_wildcards[chr]}"\.bed

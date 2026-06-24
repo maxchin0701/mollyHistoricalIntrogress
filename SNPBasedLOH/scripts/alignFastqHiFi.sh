@@ -9,7 +9,7 @@
 module load bedtools
 module load GATK
 module load anaconda3/2022.10
-conda activate genomics
+conda activate gatk
 
 #export minimap path
 export PATH=$PATH:/ocean/projects/bio230047p/mchin/software/minimap2

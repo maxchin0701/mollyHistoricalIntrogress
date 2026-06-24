@@ -8,11 +8,10 @@
 #activate conda env
 module load GATK
 module load anaconda3/2022.10
-conda activate genomics
+conda activate gatk
 module load bcftools
 
-#call genotypes for parent and hybrids
-gatk GenotypeGVCFs \
+#call genotypes for parent and hyb \
 	-R "${snakemake_input[ref]}" \
 	-V gendb://"${snakemake_params[genDBParHybDir]}" \
 	-O "${snakemake_output[0]}"

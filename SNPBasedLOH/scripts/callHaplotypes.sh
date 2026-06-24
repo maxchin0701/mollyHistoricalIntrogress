@@ -6,9 +6,9 @@
 #SBATCH -o callHaplotypes
 
 #activate conda env
-module load GATK-
+module load GATK
 module load anaconda3/2022.10
-conda activate genomics
+conda activate gatk
 
 #create dir for sample if it doesnt already exist
 if [ ! -d "data/hapCalls/"${snakemake_wildcards[sample]}"" ]; then

@@ -1,19 +1,38 @@
+# This script collects loss of heterozygosity tracts across a single chromosome
+# Outputs: 
+#     {chr}LOHRegions_GQ{gqcut}_DP{dpcut}_{pars}.tsv: tsv where rows are tracts 
+#                                                     and columns are chromosome,
+#                                                     tract start, tract end, 
+#                                                     frequency of tract (# of 
+#                                                     samples shared across), number
+#                                                     of SNPs supporting tract,
+#                                                     identities of samples supporting 
+#                                                     tract
+#     {chr}LOHAnc_GQ{gqcut}_DP{dpcut}_{pars}.tsv: tsv where rows are tracts and 
+#                                                 columns are columns are chromosome,
+#                                                 tract start, tract end,  
+#                                                 ancestry retained at locus    
+#     {chr}SNPall_GQ{gqcut}_DP{dpcut}_{pars}.tsv: tsv with positions of all fixed 
+#                                                 differences checked
+#     {chr}FixDiff_GQ{gqcut}_DP{dpcut}_{pars}.vcf.gz: .vcf subset to fixed different 
+#                                                     loci checked
+
 #### LOAD PACKAGES ####
 library(vcfR)
 library(coda)
 
-#### READ IN DATA ####
-chr <- snakemake@wildcards[["chr"]]
-#chr <- "chr1"
-parSpecies <- snakemake@wildcards[["pars"]]
-#parSpecies <- "LM"
+#### READ IN PARAMS ####
+args <- commandArgs(trailingOnly = TRUE)
+chr <- args[1]
+parSpecies <- args[2]
+cutoffGQ <- args[3]
+cutoffDP <- args[4]
 
 #print message
 print(paste0("Processing ",chr))
 
 #### READ IN AND PRUNE CHROMOSOME VCF ###
-dat <-  read.vcfR(snakemake@input[[1]])
-#dat <- read.vcfR(paste0("../data/hapCalls/",chr,"CombinedFiltParHyb.vcf.gz"))
+dat <-  read.vcfR(args[5])
 
 #### DEFINE PARENTAL SPECIES SAMPS####
 if(parSpecies == "LM"){
@@ -30,10 +49,6 @@ sampDepths <- extract.gt(dat,element="DP")
 genQual <- extract.gt(dat,element="GQ")
 unfiltGts <- extract.gt(dat,element="GT",return.alleles = T)
 
-#define cutoffs
-cutoffGQ <- as.numeric(snakemake@wildcards[["gqcut"]])
-cutoffDP <- as.numeric(snakemake@wildcards[["dpcut"]])
-
 #print message
 print(paste0("Filtering SNPs based on depth and genotype quality. Quality cutoff: ", cutoffGQ," Depth cutoff: ", cutoffDP))
 
@@ -42,23 +57,15 @@ dropSNPs <- list()
 
 #loop through samp cols
 for(j in 1:ncol(sampDepths)){
-  #dropSNPs[[length(dropSNPs)+1]] <- which(as.numeric(sampDepths[,j])<cutoffDP)
+  dropSNPs[[length(dropSNPs)+1]] <- which(as.numeric(sampDepths[,j])<cutoffDP)
   dropSNPs[[length(dropSNPs)+1]] <- which(as.numeric(genQual[,j])<cutoffGQ |
                                             is.na(as.numeric(genQual[,j])))
-  #dropSNPs[[length(dropSNPs)+1]] <- which(unfiltGts[,j] == ".")
-  #dropSNPs[[length(dropSNPs)+1]] <- which(as.numeric(sampDepths[,j])>4*mean(as.numeric(sampDepths[,j]),na.rm=T))
+  dropSNPs[[length(dropSNPs)+1]] <- which(unfiltGts[,j] == ".")
+  dropSNPs[[length(dropSNPs)+1]] <- which(as.numeric(sampDepths[,j])>4*mean(as.numeric(sampDepths[,j]),na.rm=T))
 }
 
-rowstokeep <- which(apply(genQual,1,function(x) all(as.numeric(x) >=10)))
-dropRows <- which(!(1:nrow(genQual) %in% rowstokeep))
-
 #get final list of snps to drop
-dropSNPsVec <- unique(unlist(dropSNPs))
-dropSNPs2 <- unlist(dropSNPs)
-
-diff <- dropRows[which(!(dropRows %in% dropSNPsVec))]
-
-genQual[diff[1],]
+dropSNPs <- unique(unlist(dropSNPs))
 
 if(nrow(sampDepths) - length(dropSNPs) == 0){
   #print message
@@ -71,7 +78,7 @@ if(nrow(sampDepths) - length(dropSNPs) == 0){
   
 } else {
   #print message
-  print(paste0(nrow(sampDepths) - length(dropSNPsVec), " loci kept after depth, missing data, and GQ filtering"))
+  print(paste0(nrow(sampDepths) - length(dropSNPs), " loci kept after depth, missing data, and GQ filtering"))
   
   #remove large objects
   rm(sampDepths,genQual,unfiltGts)
@@ -261,46 +268,7 @@ if(nrow(sampDepths) - length(dropSNPs) == 0){
         
         #iterate consecLOH
         consecLOH <- consecLOH + 1
-        
-      # } else if (prevLocLOH == T &&
-      #            (length(intersect(sampLOH,prevSamps)) == length(sampLOH) &&
-      #              length(intersect(sampLOH,prevSamps)) == length(prevSamps)) &&
-      #            unlist(consensusAnc) != unlist(anc[[length(anc)]])){
-      # 
-      #   #add to end of most recent LOH region
-      #   end[[length(end)]] <- curPos + 1
-      # 
-      #   #start new anc region
-      #   startAnc[[length(startAnc)+1]] <- endAnc[[length(endAnc)]] + 1
-      #   endAnc[[length(endAnc)+1]] <- curPos + 1
-      #   anc[[length(anc)+1]] <- unlist(consensusAnc)
-      # 
-      # } else if (prevLocLOH == T &&
-      #            (length(intersect(sampLOH,prevSamps)) != 0) &&
-      #            unlist(consensusAnc) == unlist(anc[[length(anc)]])){
-      #   
-      #   #start new LOH region immediately following previous one
-      #   start[[length(start)+1]] <- end[[length(end)]] + 1
-      #   end[[length(end)+1]] <- curPos + 1
-      #   nSamps[[length(nSamps)+1]] <- length(sampLOH)
-      #   
-      #   #add to end of most recent anc region
-      #   endAnc[[length(endAnc)]] <- curPos + 1
-      #   
-      # } else if (prevLocLOH == T &&
-      #            (length(intersect(sampLOH,prevSamps)) != 0) &&
-      #            unlist(consensusAnc) != unlist(anc[[length(anc)]])){
-      #   
-      #   #start new LOH region immediately following previous one
-      #   start[[length(start)+1]] <- end[[length(end)]] + 1
-      #   end[[length(end)+1]] <- curPos + 1
-      #   nSamps[[length(nSamps)+1]] <- length(sampLOH)
-      #   
-      #   #start new anc region
-      #   startAnc[[length(startAnc)+1]] <- endAnc[[length(endAnc)]] + 1
-      #   endAnc[[length(endAnc)+1]] <- curPos + 1
-      #   anc[[length(anc)+1]] <- unlist(consensusAnc)
-        
+
       } else {
         
         if(prevLocLOH == T &&

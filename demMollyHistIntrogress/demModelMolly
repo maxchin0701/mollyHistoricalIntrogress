@@ -4,8 +4,6 @@ import pandas as pd
 #load in dataframes
 #pops=pd.read_csv("data/pops.tsv", sep='\t')
 models=pd.read_csv("data/models.tsv",sep='\t')
-modelsNoAM=pd.read_csv("data/modelsNoAM.tsv",sep='\t')
-#modelsAll=pd.concat([models,modelsNoAM],axis=0)
 modelsAll=models
 chr_df = pd.read_csv("./data/chrIndex.tsv", sep="\t")
 samp_df = pd.read_csv("./data/sampsParHyb.tsv", sep='\t') 
@@ -16,18 +14,11 @@ rule all:
     input:
         expand("data/{modelAM}/iter{iter}/{modelAM}/{modelAM}_maxL.par",modelAM=models["MODELS"],iter=list(range(1,101))),
         expand("data/{modelAM}/iter{iter}/{modelAM}/{modelAM}.bestlhoods",modelAM=models["MODELS"],iter=list(range(1,101))),
-        expand("data/{modelNoAM}/iter{iter}/{modelNoAM}/{modelNoAM}_maxL.par",modelNoAM=modelsNoAM["MODELS"],iter=list(range(1,101))),
-        expand("data/{modelNoAM}/iter{iter}/{modelNoAM}/{modelNoAM}.bestlhoods",modelNoAM=modelsNoAM["MODELS"],iter=list(range(1,101))),
         expand("data/{model}/bestIter/{model}.lhoods",model=modelsAll["MODELS"]),
         expand("data/{model}/bestIter/{model}.AIC",model=modelsAll["MODELS"]),
 
-#constrain wildcards
-wildcard_constraints:
-    modelNoAM=".*NoAM.*",
-    modelAM="(?!.*NoAM).*",
-
 rule subsampleFilterVCF:
-    priority: 14
+    priority: 13
     input:
         "data/hapCalls/{chr}CombinedParHyb.vcf.gz"        
     resources:
@@ -46,7 +37,7 @@ rule subsampleFilterVCF:
         
 #subsample and filter vcf
 rule genRefPanel:
-    priority: 13
+    priority: 12
     input:
         "data/hapCallParHybs/{chr}.vcf.gz"        
     resources:
@@ -65,7 +56,7 @@ rule genRefPanel:
 
 #read based phasing with whatshap
 rule phaseSamps:
-    priority: 12
+    priority: 11
     input:
         "data/hapCallParHybs/{chr}.vcf.gz",  
         "data/refPanel/{chr}WhatshapRefPanel.vcf.gz"
@@ -87,7 +78,7 @@ rule phaseSamps:
         
 #merge hybrids and parents separately
 rule mergeHybPars:
-    priority: 11
+    priority: 10
     input:
         expand("data/phasedHapsWhatshap/{{chr}}_{samp}Phased.vcf.gz",samp = samp_df["SAMPS"]),  
         expand("data/phasedHapsWhatshap/{{chr}}_{samp}Phased.vcf.gz.tbi",samp = samp_df["SAMPS"])
@@ -107,7 +98,7 @@ rule mergeHybPars:
 
 #filter vcf
 rule filtPhasedVCF:
-    priority: 10
+    priority: 9
     input:
         "data/phasedHapsWhatshap/{chr}Phased.vcf.gz"
     resources:
@@ -126,7 +117,7 @@ rule filtPhasedVCF:
 
 #combine chromosome VCF files
 rule combineChrVCF:
-    priority: 9
+    priority: 8
     input:
         "data/chrHaps.list",
         "data/refGenome/PForHapMex.dict",
@@ -149,7 +140,7 @@ rule combineChrVCF:
 
 #split vcf
 rule splitHaps:
-    priority: 8
+    priority: 7
     input:
         "data/combinedHap/chrSymParHybCombinedFilt.vcf.gz"
     resources:
@@ -168,7 +159,7 @@ rule splitHaps:
 
 #get partitions
 rule getPartitions:
-    priority: 7
+    priority: 6
     input:
         "data/splitHap/splitParHyb.vcf.gz"
     resources:
@@ -185,29 +176,8 @@ rule getPartitions:
     script:
         "scripts/getPartitions.sh"
 
-#combine chromosome VCF no AM
-rule combineChrVCFNoAM:
-    priority: 8
-    input:
-        "data/chrHaps.list",
-        "data/refGenome/PForHapMex.dict",
-        "data/sampsNoAM.args"
-    resources:
-        slurm_partition="low",
-        nodes=1,
-        runtime=300,
-        slurm_extra=lambda wildcards: f"--ntasks-per-node=10 -o scriptOuts/combineChrVCF -t 5:00:00",
-    output:
-        "data/combinedHap/chrAllCombinedFilt.vcf.gz",
-        "data/combinedHap/chrSymParCombinedFilt.vcf.gz"
-    threads: 10
-    log: 
-        "data/combinedHap/combineChrVCF.log"
-    script:
-        "scripts/combineChrVCFNoAM.sh"
-
 rule getSFS:
-    priority: 6
+    priority: 5
     input:
         inVCF="data/splitHapPartitions/splitParHyb_{iter}.vcf.gz",
         pops="data/pops.tsv",
@@ -229,45 +199,6 @@ rule getSFS:
         "data/sfs/getSFS_{iter}.log"
     script:
         "scripts/getSFS.sh"
-
-rule getSFSNoAM:
-    priority: 6
-    input:
-        inVCF="data/combinedHap/chrSymParCombinedFilt.vcf.gz",
-        pops="data/popsNoAM.tsv",
-    params:
-        nSampPop0=8,
-        nSampPop1=4,
-    resources:
-        slurm_partition="RM-shared",
-        nodes=1,
-        runtime=60,
-        slurm_extra=lambda wildcards: f"--ntasks-per-node=10 -o scriptOuts/getSFSNoAM -t 1:00:00",
-    output:
-        "data/sfsNoAM/fastsimcoal2/demModelMolly_jointMAFpop1_0.obs",
-    threads: 10
-    log: 
-        "data/sfsNoAM/getSFSNoAM.log"
-    script:
-        "scripts/getSFSNoAM.sh"
-        
-rule moveSFSNoAM:
-    priority: 5
-    input:
-        "data/sfsNoAM/fastsimcoal2/demModelMolly_jointMAFpop1_0.obs",
-        "data/{modelNoAM}/{modelNoAM}.tpl",
-    resources:
-        slurm_partition="RM-shared",
-        nodes=1,
-        runtime=60,
-        slurm_extra=lambda wildcards: f"--ntasks-per-node=1 -o scriptOuts/moveSFSNoAM_{wildcards.modelNoAM} -t 1:00:00",
-    output:
-        "data/{modelNoAM}/{modelNoAM}_jointMAFpop1_0.obs"
-    threads: 1
-    log:
-        "data/{modelNoAM}/moveSFSNoAM_{modelNoAM}.log"
-    script:
-        "scripts/moveSFSNoAM.sh"
         
 rule runFSCInitial:
     priority: 4
@@ -294,27 +225,6 @@ rule runFSCInitial:
         "data/{modelAM}/iter{iter}/runFSCInitial_{modelAM}_{iter}.log"
     script:
         "scripts/runFSCInitial.sh"
-
-rule runFSCInitialNoAM:
-    priority: 4
-    input:
-        "data/{modelNoAM}/{modelNoAM}_jointMAFpop1_0.obs",
-        "data/{modelNoAM}/{modelNoAM}.tpl",
-    resources:
-        slurm_partition="RM-shared",
-        nodes=1,
-        runtime=4320,
-        mem_mb=8000,
-        slurm_extra=lambda wildcards: f"--ntasks-per-node=4 -o scriptOuts/runFSCInitialNoAM_{wildcards.modelNoAM}_{wildcards.iter} -t 72:00:00",
-    output:
-        "data/{modelNoAM}/iter{iter}/{modelNoAM}/{modelNoAM}_maxL.par",
-        "data/{modelNoAM}/iter{iter}/{modelNoAM}/{modelNoAM}.bestlhoods",
-    threads: 4
-    retries: 5
-    log:
-        "data/{modelNoAM}/iter{iter}/runFSCInitialNoAM_{modelNoAM}_{iter}.log"
-    script:
-        "scripts/runFSCInitialNoAM.sh"
 
 rule getBestRun:
     priority: 3

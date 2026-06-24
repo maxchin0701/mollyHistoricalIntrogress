@@ -1,10 +1,20 @@
-#### PREPARE OBJECTS ####
+# This script simulates 1000 sets of tracts with sum length approximately equal to 
+# the total length of the empirical LOH tracts. Lengths of individual simulated tracts
+# are sampled from a exponential distribution with rate parameter = inverse of 
+# empirical mean
+# output:
+#   simLOHShared_{iter}.bed: bed file with simulated loss of heterozygosity tracts
 
+#### READ IN PARAMS ####
+args <- commandArgs(trailingOnly = TRUE)
+inLOHRegions <- args[1]
+
+#### PREPARE OBJECTS ####
 #set genome size, distribution to simulate
 chrSizes <- read.delim(paste0("data/chrIndex.tsv"),
                        sep="\t",row.names = NULL,header = T)
 #load in data
-sharedLOHEmpirical <- read.delim("output/LOHRegionsSharedCombined/LOHRegionsSharedCombined.bed",
+sharedLOHEmpirical <- read.delim(inLOHRegions,
                                  sep='\t',header=F)
 colnames(sharedLOHEmpirical) <- c("chr","start","end")
 sharedLOHEmpirical$intSize <- sharedLOHEmpirical$end - sharedLOHEmpirical$start

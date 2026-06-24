@@ -1,19 +1,32 @@
+# This script summarizes copy number variation across simulated and empirical 
+# LOH tracts. 
+# output:
+#   LOHSummaryCN.tsv: tsv with two columns: category of tract (simulated vs 
+#                     empirical) and hpdInterval/mean CNV across tract
+
+
 #### LIBRARIES ####
 library(coda)
 
 #### SET SEED ####
 set.seed(1)
 
+#### READ IN PARAMS ####
+args <- commandArgs(trailingOnly = TRUE)
+inLOHRegions <- args[1]
+inGCNV <- args[2]
+outSummary <- args[3]
+
 #### LOAD IN DATA ####
 #load in empirical data
-sharedLOHEmpirical <- read.delim("output/LOHRegionsSharedCombined/LOHRegionsSharedCombined.bed",
+sharedLOHEmpirical <- read.delim(inLOHRegions,
                                  sep='\t',header=F)
 colnames(sharedLOHEmpirical) <- c("chr","start","end")
 sharedLOHEmpirical$intSize <- sharedLOHEmpirical$end - sharedLOHEmpirical$start
 
 #Load in copy number variation
-genomeCN <- read.delim("data/gCNV/gCNV/processedGCNV.tsv",
-                                 sep='\t',header=T)
+genomeCN <- read.delim(inGCNV,
+                       sep='\t',header=T)
 colnames(genomeCN)[5:23] <- gsub(".","-",colnames(genomeCN)[5:23],
                                  fixed=T)
 
@@ -93,7 +106,7 @@ LOHCNSummary <- as.data.frame(matrix(c("sim",rep("emp",65),
 colnames(propSigDf) <- c("category", "tractAveragedCN")
 #save
 write.table(LOHCNSummary, 
-            file="output/results/LOHSummaryCN.tsv", 
+            file=outSummary, 
             quote=FALSE, sep='\t',row.names=FALSE)
 
 

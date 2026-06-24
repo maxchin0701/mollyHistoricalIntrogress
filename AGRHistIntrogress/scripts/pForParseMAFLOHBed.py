@@ -14,7 +14,7 @@ from Bio.AlignIO.MafIO import MafIndex
 import argparse
 import pandas as pd
 
-#function for getting postion in alignment
+#function for getting allele at postion in alignment
 def getAlleleAtPos(alignment,ungapLength,refSampIndex):
     #get reference sequence
     refSeq=alignment[refSampIndex].seq

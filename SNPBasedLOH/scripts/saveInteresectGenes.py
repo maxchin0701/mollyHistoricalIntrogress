@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Wed Jul  9 16:49:37 2025
-
-@author: maxchin
+This script saves gene ENSEMBL IDs and gene symbols for genes intersecting
+empirical shared LOH tracts
 """
 
 import argparse
-import pandas
-pandas.options.mode.chained_assignment = None
+import pandas as pd
 
 #parse user inputs
 parser = argparse.ArgumentParser(description="Extracting gene names from intersection")
@@ -37,7 +35,7 @@ def getLongestTranscripts(inIntersect):
     return(transcripts)
 
 #parse through empirical df
-dfIntersect = pandas.read_csv(args.inIntersect,sep='\t',header=None)
+dfIntersect = pd.read_csv(args.inIntersect,sep='\t',header=None)
 keepTranscriptsEmp=getLongestTranscripts(dfIntersect)
 
 #store empirical lengths
@@ -77,6 +75,7 @@ for i in range(0,len(dfIntersect)):
 print(len(geneN))
 print(geneRefseq)
 '''
+#save
 out=open(args.outGenes,'w')
 for i in range(len(geneN)):
     out.write(geneN[i]+'\t'+geneRefseq[i]+'\t'+geneSymbols[i]+'\n')

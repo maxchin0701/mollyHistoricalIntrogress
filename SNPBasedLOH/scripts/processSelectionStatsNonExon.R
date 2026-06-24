@@ -1,9 +1,16 @@
 #### LOAD PACKAGES ####
 library(twosamples)
 
+#### READ IN PARAMS ####
+args <- commandArgs(trailingOnly = TRUE)
+empStats <- args[1]
+outD <- args[2]
+outH <- args[3]
+outE <- args[4]
+
 ##### LOAD IN DATA ####
 #empirical nonexon
-datNonExonEmp <- read.delim(paste0("output/selectionStats/LOHRegionsEmpStatsNonExon.tsv"),
+datNonExonEmp <- read.delim(empStats,
                    sep="\t",row.names = NULL,header = T)
 datNonExonEmp$iter <- 0
 datNonExonEmp$class <- "Empirical"
@@ -180,7 +187,7 @@ propSigDfD <- as.data.frame(matrix(c(propSigLatDKS, propSigMexDKS,
                                     propSigLatDCVM, propSigMexDCVM),nrow=2,byrow=F)) 
 
 colnames(propSigDfD) <- c("KS","MWU","CVM")
-rownames(propSigDfD) <- c("latExon","mexExon")
+rownames(propSigDfD) <- c("lat","mex")
 
 #H
 propSigDfH <- as.data.frame(matrix(c(propSigLatHKS, propSigMexHKS,
@@ -188,7 +195,7 @@ propSigDfH <- as.data.frame(matrix(c(propSigLatHKS, propSigMexHKS,
                                     propSigLatHCVM, propSigMexHCVM),nrow=2,byrow=F)) 
 
 colnames(propSigDfH) <- c("KS","MWU","CVM")
-rownames(propSigDfH) <- c("latExon","mexExon")
+rownames(propSigDfH) <- c("lat","mex")
 
 #H
 propSigDfE <- as.data.frame(matrix(c(propSigLatEKS, propSigMexEKS,
@@ -196,16 +203,16 @@ propSigDfE <- as.data.frame(matrix(c(propSigLatEKS, propSigMexEKS,
                                      propSigLatECVM, propSigMexECVM),nrow=2,byrow=F)) 
 
 colnames(propSigDfE) <- c("KS","MWU","CVM")
-rownames(propSigDfE) <- c("latExon","mexExon")
+rownames(propSigDfE) <- c("lat","mex")
 
 #save
 write.table(propSigDfD, 
-            file="output/results/LOHDStatsNonExon.tsv", 
+            file=outD, 
             quote=FALSE, sep='\t',row.names=FALSE)
 write.table(propSigDfH, 
-            file="output/results/LOHHStatsNonExon.tsv", 
+            file=outH, 
             quote=FALSE, sep='\t',row.names=FALSE)
 write.table(propSigDfE,
-            file="output/results/LOHEStatsNonExon.tsv", 
+            file=outE, 
             quote=FALSE, sep='\t',row.names=FALSE)
 

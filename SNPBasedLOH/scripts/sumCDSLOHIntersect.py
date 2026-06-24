@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Wed Jul  9 16:49:37 2025
-
-@author: maxchin
+This script calculates sums up and compares the total amount of coding sequence 
+intersected by empirical and simulated shared LOH tracts.
 """
 
 import argparse
-import pandas
-pandas.options.mode.chained_assignment = None
+import pandas as pd
 import os
 import statistics
 import arviz as az
@@ -18,6 +16,7 @@ import numpy as np
 parser = argparse.ArgumentParser(description="Summing CDS across LOH-GFF intersection")
 parser.add_argument("--inIntersect", action="store", dest="inIntersect", type=str)
 parser.add_argument("--inSimIntersect",action="store",dest="inSimIntersect",type=str)
+parser.add_argument("--out",action="store",dest="out",type=str)
 args=parser.parse_args()
 
 #define function for gettting longest transcripts
@@ -55,7 +54,7 @@ def calcCDSOverlap(LOHStart,LOHEnd,CDSStart,CDSEnd):
 
 
 #parse through empirical df
-dfIntersect = pandas.read_csv(args.inIntersect,sep='\t',header=None)
+dfIntersect = pd.read_csv(args.inIntersect,sep='\t',header=None)
 keepTranscriptsEmp=getLongestTranscripts(dfIntersect)
 
 #store empirical lengths
@@ -63,7 +62,7 @@ sumCDSEmp=0
 
 #sum empirical cds 
 for i in range(0,len(dfIntersect)):
-    print("processing empirical output")
+    #print("processing empirical output")
     #isolate to just CDS rows
     if (dfIntersect.iloc[i,5] == "CDS" and 
         dfIntersect.iloc[i,11].split(';')[1].split('=')[1] in keepTranscriptsEmp): 
@@ -79,7 +78,7 @@ for simOut in os.scandir(args.inSimIntersect):
     simIter+=1
     print("analyzing simulation iteration ", simIter)
     #read in simulation output
-    dfSimIntersect = pandas.read_csv(simOut,sep='\t',header=None)
+    dfSimIntersect = pd.read_csv(simOut,sep='\t',header=None)
     keepTranscriptsSim=getLongestTranscripts(dfSimIntersect)
     sumCDSSim=0
     for i in range(0,len(dfSimIntersect)):
@@ -99,12 +98,13 @@ for i in sumCDSSimAll:
     if i >= sumCDSEmp:
         nGOE+=1
 
-print("Total empirical CDS: ",sumCDSEmp)
-print("Average simulated total CDS: ",statistics.mean(sumCDSSimAll))
-print("p-value: ",nGOE/1000)
-print("HPD interval: ",az.hdi(np.array(sumCDSSimAll), hdi_prob=0.95))
-print("Done")
-
+#write to file
+out=open(args.out,'w')
+out.write("Total empirical CDS: " + str(sumCDSEmp) + "\n")
+out.write("Average simulated total CDS: " + str(statistics.mean(sumCDSSimAll)) + "\n")
+out.write("p-value (proportion of simulated tract sets with CDS sum > empirical): " + str(nGOE/1000) + "\n")
+out.write("HPD interval: " + str(az.hdi(np.array(sumCDSSimAll), hdi_prob=0.95)) + "\n")
+out.close()
 
     
 

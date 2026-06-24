@@ -7,7 +7,7 @@
 
 module load GATK
 module load anaconda3/2022.10
-conda activate genomics
+conda activate gatk
 
 #run python script to generate bed for chr
 cat ${snakemake_input[bedF]} > "${snakemake_output[0]}"
