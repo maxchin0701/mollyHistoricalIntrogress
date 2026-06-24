@@ -1,1 +1,1 @@
-Data directory for reference genome and interval lists.
+Output directory for Cactus run.
